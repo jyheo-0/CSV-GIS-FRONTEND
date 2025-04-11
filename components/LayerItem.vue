@@ -67,7 +67,8 @@
 <v-slider
   v-model="layer.size"
   :min="1"
-  :max="100"
+  :max="99"
+  :step="1"
   :disabled="advancedEnabled"
   class="align-center"
   hide-details
@@ -97,7 +98,7 @@
 <v-expand-transition>
   <div v-show="advancedEnabled" class="mt-2">
 <!-- X 축 -->
-<v-slider v-model="layer.scaleX" label="X 크기" :min="1" :max="100" class="mb-2">
+<v-slider v-model="layer.scaleX" label="X" :min="1" :max="99" :step="1" class="mb-2">
   <template #append>
     <v-text-field
       v-model="layer.scaleX"
@@ -106,13 +107,13 @@
       density="compact"
       hide-details
       single-line
-      style="width: 60px"
+      style="width: 70px"
     />
   </template>
 </v-slider>
 
 <!-- Y 축 -->
-<v-slider v-model="layer.scaleY" label="Y 크기" :min="1" :max="100" class="mb-2">
+<v-slider v-model="layer.scaleY" label="Y" :min="1" :max="99" :step="1" class="mb-2">
   <template #append>
     <v-text-field
       v-model="layer.scaleY"
@@ -120,13 +121,13 @@
       density="compact"
       hide-details
       single-line
-      style="width: 60px"
+      style="width: 70px"
     />
   </template>
 </v-slider>
 
 <!-- Z 축 -->
-<v-slider v-model="layer.scaleZ" label="Z 크기" :min="1" :max="100">
+<v-slider v-model="layer.scaleZ" label="Z" :min="1" :max="99":step="1" >
   <template #append>
     <v-text-field
       v-model="layer.scaleZ"
@@ -134,7 +135,8 @@
       density="compact"
       hide-details
       single-line
-      style="width: 60px"
+      style="width: 70px"
+  
     />
   </template>
 </v-slider>
@@ -203,7 +205,10 @@ function selectShape(item) {
   emit('update', { id: props.layer.id, type: item.value })
 }
 
-
+watch(() => layer.size, (val) => {
+  if (val < 1) layer.size = 1
+  if (val > 100) layer.size = 100
+})
 
 </script>
 
@@ -230,5 +235,7 @@ function selectShape(item) {
   font-size: 12px;
   color: #ccc;
 }
-
+::v-deep(.v-expansion-panel-text__wrapper) {
+  padding: 12px 0 !important;
+}
 </style>
