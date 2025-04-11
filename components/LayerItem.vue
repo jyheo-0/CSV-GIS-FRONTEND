@@ -2,9 +2,18 @@
   <v-expansion-panels variant="accordion" class="mb-2">
     <v-expansion-panel elevation="1">
       <v-expansion-panel-title>
-        <v-icon class="mr-2">mdi-eye</v-icon>
-        {{ layer.name }}
-      </v-expansion-panel-title>
+        <v-icon
+  class="mr-2"
+  style="cursor: pointer"
+  @click.stop="layer.visible = !layer.visible"
+  :icon="layer.visible ? 'mdi-eye' : 'mdi-eye-off'"
+  :color="layer.visible ? 'light-grey' : 'grey'"
+>
+</v-icon>
+
+  {{ layer.name }}
+</v-expansion-panel-title>
+
 
       <v-expansion-panel-text>
         <!-- 마커 타입 (카드 드롭다운) -->
@@ -53,6 +62,94 @@
           </v-card>
         </v-menu>
 
+<!-- 👇 마커 크기 조절 슬라이더 (기본) -->
+<h4 class="mt-4 mb-1 text-sm">마커 크기</h4>
+<v-slider
+  v-model="layer.size"
+  :min="1"
+  :max="100"
+  :disabled="advancedEnabled"
+  class="align-center"
+  hide-details
+>
+  <template v-slot:append>
+    <v-text-field
+      v-model="layer.size"
+      :disabled="advancedEnabled"
+      density="compact"
+      style="width: 70px"
+      type="number"
+      hide-details
+      single-line
+    />
+  </template>
+</v-slider>
+
+<!-- 👇 고급 설정 체크박스 -->
+<v-checkbox
+  v-model="advancedEnabled"
+  label="고급 크기 설정 (X/Y/Z)"
+  hide-details
+  class="mt-2"
+/>
+
+<!-- 👇 고급 설정 XYZ 슬라이더 -->
+<v-expand-transition>
+  <div v-show="advancedEnabled" class="mt-2">
+<!-- X 축 -->
+<v-slider v-model="layer.scaleX" label="X 크기" :min="1" :max="100" class="mb-2">
+  <template #append>
+    <v-text-field
+      v-model="layer.scaleX"
+      maxlength="3"
+      type="number"
+      density="compact"
+      hide-details
+      single-line
+      style="width: 60px"
+    />
+  </template>
+</v-slider>
+
+<!-- Y 축 -->
+<v-slider v-model="layer.scaleY" label="Y 크기" :min="1" :max="100" class="mb-2">
+  <template #append>
+    <v-text-field
+      v-model="layer.scaleY"
+      type="number"
+      density="compact"
+      hide-details
+      single-line
+      style="width: 60px"
+    />
+  </template>
+</v-slider>
+
+<!-- Z 축 -->
+<v-slider v-model="layer.scaleZ" label="Z 크기" :min="1" :max="100">
+  <template #append>
+    <v-text-field
+      v-model="layer.scaleZ"
+      type="number"
+      density="compact"
+      hide-details
+      single-line
+      style="width: 60px"
+    />
+  </template>
+</v-slider>
+
+  </div>
+</v-expand-transition>
+
+
+
+
+
+
+
+
+
         <!-- 색상 선택 -->
         <h4 class="mt-4 mb-1 text-sm">기본 색상</h4>
         <v-color-picker
@@ -83,19 +180,22 @@ const props = defineProps({
 const emit = defineEmits(['update'])
 
 const geometryOptions = [
+  { value: 'none', label: '미선택' },
+  { value: 'point', label: '점' },
+  { value: 'circle', label: '원' },
   { value: 'vertical-line', label: '수직선' },
   { value: 'cylinder', label: '실린더' },
-  { value: 'circle', label: '원' },
   { value: 'sphere', label: '구' },
-  { value: 'symbol', label: '심볼' },
-  { value: 'point', label: '점' },
   { value: 'cone', label: '콘' },
+  { value: 'symbol', label: '심볼' },
   { value: 'icon', label: '아이콘' }
 ]
 
 const menuOpen = ref(false)
-const selected = ref(geometryOptions.find(opt => opt.value === props.layer.shape) || {})
+const selected = ref(geometryOptions.find(opt => opt.value === 'none'))
 const clusterEnabled = ref(true)
+
+const advancedEnabled  = ref(false)
 
 function selectShape(item) {
   selected.value = item
@@ -103,30 +203,8 @@ function selectShape(item) {
   emit('update', { id: props.layer.id, type: item.value })
 }
 
-function getIconSVG(type) {
-  switch (type) {
-    case 'vertical-line':
-      return `<svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <rect x="11" y="4" width="2" height="16" fill="#1E3A8A" />
-              </svg>`
-    case 'circle':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#3B82F6" /></svg>`
-    case 'point':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="#F97316" /></svg>`
-    case 'sphere':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="url(#sphereGradient)" /><defs><radialGradient id="sphereGradient"><stop offset="0%" stop-color="#67e8f9"/><stop offset="100%" stop-color="#0e7490"/></radialGradient></defs></svg>`
-    case 'cone':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 4L4 20H20L12 4Z" fill="#FACC15" /></svg>`
-    case 'cylinder':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><rect x="8" y="4" width="8" height="16" rx="4" fill="#4ADE80" /></svg>`
-    case 'icon':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 2C10.3 2 9 3.3 9 5s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3zm0 6c-2.2 0-4 1.8-4 4v7h8v-7c0-2.2-1.8-4-4-4z" fill="#6366F1"/></svg>`
-    case 'symbol':
-      return `<svg width="20" height="20" viewBox="0 0 24 24"><path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4zm0 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4z" fill="#A855F7"/></svg>`
-    default:
-      return ''
-  }
-}
+
+
 </script>
 
 <style scoped>
@@ -152,4 +230,5 @@ function getIconSVG(type) {
   font-size: 12px;
   color: #ccc;
 }
+
 </style>
