@@ -2,7 +2,7 @@
     <div class="mt-6">
       <v-expansion-panels>
         <v-expansion-panel>
-          <v-expansion-panel-title class="px-2 py-1 text-sm">라벨 설정</v-expansion-panel-title>
+          <v-expansion-panel-title class="px-2 py-1">라벨 설정</v-expansion-panel-title>
           <v-expansion-panel-text class="pt-2">
             <!-- 라벨 컬럼 선택 -->
             <v-select
