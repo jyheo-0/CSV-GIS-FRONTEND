@@ -6,10 +6,10 @@
       <v-select
         v-model="localLabelColumn"
         :items="['(라벨 없음)', ...columns]"
-        label="라벨에 사용할 컬럼"
         density="compact"
         hide-details
         @update:modelValue="onLabelChange"
+        class="label-select"
       />
     </div>
 
@@ -78,7 +78,7 @@ const emit = defineEmits<{
   (e: 'update-label-stroke-color', value: string): void
 }>()
 
-const localLabelColumn = ref(props.layer.labelColumn ?? null)
+const localLabelColumn = ref(props.layer.labelColumn ?? '(라벨 없음)')
 const localLabelSize = ref(Number(props.layer.labelSize ?? 14))
 
 const localFontColor = ref(props.layer.fontColor ?? '#000000') // 검정색
@@ -97,7 +97,7 @@ function clampLabelSize() {
 }
 
 watch(() => props.layer.labelColumn, val => {
-  localLabelColumn.value = val ?? null
+  localLabelColumn.value = val ?? '(라벨 없음)'
 })
 watch(() => props.layer.labelSize, val => {
   localLabelSize.value = Number(val ?? 14)
@@ -114,7 +114,13 @@ watch(() => props.layer.strokeColor, (val) => {
 </script>
 
 <style scoped>
-.mb-6 {
-  margin-bottom: 24px;
+.label-select {
+  font-size: 13px; /* 셀렉트 내부 글자 크기 */
+}
+
+.label-select :deep(.v-field__input),
+.label-select :deep(.v-select__selection-text),
+.label-select :deep(.v-label) {
+  font-size: 13px !important;
 }
 </style>
