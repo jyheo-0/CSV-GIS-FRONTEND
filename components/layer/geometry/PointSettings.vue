@@ -152,24 +152,13 @@
 
 <script setup>
 import { ref, watch } from 'vue'
+import { geometryOptions } from '@/constants/geometryOptions'
 
 const props = defineProps({
   layer: Object,
   presetColors: Array,
 })
 const emit = defineEmits(['update-type', 'update-size', 'update-color'])
-
-const geometryOptions = [
-  { value: 'none', label: '선택 안함' },
-  { value: 'point', label: '점' },
-  { value: 'circle', label: '원' },
-  { value: 'vertical-line', label: '수직선' },
-  { value: 'cylinder', label: '실린더' },
-  { value: 'sphere', label: '구' },
-  { value: 'cone', label: '콘' },
-  { value: 'symbol', label: '심볼' },
-  { value: 'icon', label: '아이콘' }
-]
 
 const localSize = ref(props.layer.size ?? 50)
 const localColor = ref(props.layer.baseColor ?? '#ff6b6b')

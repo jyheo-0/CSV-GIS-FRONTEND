@@ -6,20 +6,23 @@
       elevation="1"
       class="layer-panel"
     >
-      <v-expansion-panel-title class="d-flex justify-space-between align-center">
-        <div class="d-flex align-center">
-          <v-icon
-            class="mr-2"
-            style="cursor: pointer"
-            @click.stop="layer.visible = !layer.visible"
-            :icon="layer.visible ? 'mdi-eye' : 'mdi-eye-off'"
-            :color="layer.visible ? 'light-grey' : 'grey'"
-          />
-          {{ layer.name }}
+      <!-- ✅ 상위: 칩 오른쪽 끝 정렬되도록 감싸줌 -->
+      <v-expansion-panel-title>
+        <div class="d-flex justify-space-between align-center w-100">
+          <div class="d-flex align-center">
+            <v-icon
+              class="mr-2"
+              style="cursor: pointer"
+              @click.stop="layer.visible = !layer.visible"
+              :icon="layer.visible ? 'mdi-eye' : 'mdi-eye-off'"
+              :color="layer.visible ? 'light-grey' : 'grey'"
+            />
+            {{ layer.name }}
+          </div>
+          <v-chip size="small" color="primary" variant="tonal">
+            {{ layer.geometryType.toUpperCase() }}
+          </v-chip>
         </div>
-        <v-chip size="small" color="primary" variant="tonal" class="ml-2">
-          {{ layer.geometryType.toUpperCase() }}
-        </v-chip>
       </v-expansion-panel-title>
 
       <v-expansion-panel-text class="pt-1">
@@ -27,16 +30,15 @@
 
           <!-- 포인트 설정 -->
           <v-expansion-panel v-if="layer.geometryType === 'point'">
-            <v-expansion-panel-title class="d-flex  align-center">
-              <div class="d-flex align-center">
-                포인트 설정
-              </div>
+            <!-- ✅ 하위: 요약 부분만 ml-auto로 오른쪽 -->
+            <v-expansion-panel-title class="d-flex align-center">
+              <div class="d-flex align-center">포인트 설정</div>
               <div class="point-summary ml-auto">
-                  <img
-                :src="`/markers/${layer.markerType}.svg`"
-                :alt="layer.markerType"
-                class="marker-icon"
-              />
+                <img
+                  :src="`/markers/${layer.markerType}.svg`"
+                  :alt="layer.markerType"
+                  class="marker-icon"
+                />
                 <span class="marker-size">{{ layer.size }}px</span>
                 <div class="marker-color" :style="{ backgroundColor: layer.baseColor }" />
               </div>
