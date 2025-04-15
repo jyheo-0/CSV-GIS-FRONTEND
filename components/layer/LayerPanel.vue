@@ -23,36 +23,82 @@
       </v-expansion-panel-title>
 
       <v-expansion-panel-text class="pt-1">
-        <v-expansion-panels multiple class="sub-settings">
-          <v-expansion-panel>
-            <v-expansion-panel-title>지오메트리 설정</v-expansion-panel-title>
-            <v-expansion-panel-text class="px-0 py-0">
-              <GeometrySettings :layer="layer" />
-              <LabelSettings
-                :layer="layer"
-                :columns="columns"
-                @update-label-column="layer.labelColumn = $event"
-                @update-label-size="layer.labelSize = $event"
-              />
-              <LocationSettings
-                :layer="layer"
-                :columns="columns"
-                @update-lat-column="layer.latColumn = $event"
-                @update-lng-column="layer.lngColumn = $event"
-              />
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
+  <v-expansion-panels multiple class="sub-settings">
+    
+    <!-- 포인트용 레이어 -->
+    <v-expansion-panel v-if="layer.type === 'point'">
+      <v-expansion-panel-title>포인트 설정</v-expansion-panel-title>
+      <v-expansion-panel-text class="px-0 py-0">
+        <PointSettings
+          :layer="layer"
+          @update-size="layer.size = $event"
+          @update-color="layer.baseColor = $event"
+        />
       </v-expansion-panel-text>
+    </v-expansion-panel>
+
+    <!-- 라인용 레이어 -->
+    <v-expansion-panel v-if="layer.type === 'line'">
+      <v-expansion-panel-title>라인 설정</v-expansion-panel-title>
+      <v-expansion-panel-text class="px-0 py-0">
+        <LineSettings
+          :layer="layer"
+          @update-line-width="layer.lineWidth = $event"
+          @update-color="layer.strokeColor = $event"
+        />
+      </v-expansion-panel-text>
+    </v-expansion-panel>
+
+    <!-- 폴리곤용 레이어 -->
+    <v-expansion-panel v-if="layer.type === 'polygon'">
+      <v-expansion-panel-title>폴리곤 설정</v-expansion-panel-title>
+      <v-expansion-panel-text class="px-0 py-0">
+        <PolygonSettings
+          :layer="layer"
+          @update-fill-color="layer.fillColor = $event"
+          @update-filled="layer.filled = $event"
+        />
+      </v-expansion-panel-text>
+    </v-expansion-panel>
+
+    <!-- 라벨 설정 -->
+    <v-expansion-panel>
+      <v-expansion-panel-title>라벨 설정</v-expansion-panel-title>
+      <v-expansion-panel-text class="px-0 py-0">
+        <LabelSettings
+          :layer="layer"
+          :columns="columns"
+          @update-label-column="layer.labelColumn = $event"
+          @update-label-size="layer.labelSize = $event"
+        />
+      </v-expansion-panel-text>
+    </v-expansion-panel>
+
+    <!-- 위치 설정 -->
+    <v-expansion-panel>
+      <v-expansion-panel-title>위치 설정</v-expansion-panel-title>
+      <v-expansion-panel-text class="px-0 py-0">
+        <LocationSettings
+          :layer="layer"
+          :columns="columns"
+          @update-lat-column="layer.latColumn = $event"
+          @update-lng-column="layer.lngColumn = $event"
+        />
+      </v-expansion-panel-text>
+    </v-expansion-panel>
+
+  </v-expansion-panels>
+</v-expansion-panel-text>
+
     </v-expansion-panel>
   </v-expansion-panels>
 </template>
 
 <script setup>
 import { ref } from 'vue'
-import GeometrySettings from './GeometrySettings.vue'
 import LabelSettings from './LabelSettings.vue'
 import LocationSettings from './LocationSettings.vue'
+import PointSettings from './geometry/PointSettings.vue'
 
 const columns = ['위도', '경도', '정류장명', '설치년도']
 
