@@ -30,7 +30,6 @@
 
           <!-- 포인트 설정 -->
           <v-expansion-panel v-if="layer.geometryType === 'point'">
-            <!-- ✅ 하위: 요약 부분만 ml-auto로 오른쪽 -->
             <v-expansion-panel-title class="d-flex align-center">
               <div class="d-flex align-center">포인트 설정</div>
               <div class="point-summary ml-auto">
@@ -83,10 +82,18 @@
             <v-expansion-panel-title class="d-flex align-center">
               <div>라벨 설정</div>
               <div class="label-summary ml-auto">
-                <span class="label-column">
-                  {{ layer.labelColumn ? layer.labelColumn : '사용 안 함' }}
+                <span
+  class="label-preview-text"
+  :style="layer.labelColumn ? {
+    color: layer.labelColor ?? '#000000',
+    WebkitTextStroke: `1px ${layer.labelStrokeColor ?? '#ffffff'}`
+  } : {}"
+>
+  {{ layer.labelColumn ? layer.labelColumn : '사용 안 함' }}
+</span>
+                <span class="label-size" v-if="layer.labelColumn">
+                  {{ formatLabelSize(layer.labelSize) }}
                 </span>
-                <span class="label-size" v-if="layer.labelColumn">{{ formatLabelSize(layer.labelSize) }}</span>
               </div>
             </v-expansion-panel-title>
 
@@ -96,9 +103,11 @@
                 :columns="columns"
                 @update-label-column="layer.labelColumn = $event"
                 @update-label-size="layer.labelSize = $event"
+                @update-label-color="layer.labelColor = $event"
+                @update-label-stroke-color="layer.labelStrokeColor = $event"
               />
-              </v-expansion-panel-text>
-            </v-expansion-panel>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
 
           <!-- 위치 설정 -->
           <v-expansion-panel>
@@ -126,9 +135,7 @@ import LocationSettings from './LocationSettings.vue'
 import PointSettings from './geometry/PointSettings.vue'
 import LineSettings from './geometry/LineSettings.vue'
 import PolygonSettings from './geometry/PolygonSettings.vue'
-// ✅ import geometryOptions
 import { geometryOptions } from '@/constants/geometryOptions'
-
 
 interface Layer {
   id: number
@@ -149,8 +156,9 @@ interface Layer {
   lngColumn?: string
   labelColumn?: string | null
   labelSize?: string | number
+  labelColor?: string
+  labelStrokeColor?: string
 }
-
 
 const columns = ['위도', '경도', '정류장명', '설치년도']
 
@@ -196,10 +204,7 @@ function formatLabelSize(size: string | number | null | undefined): string {
   const raw = typeof size === 'number' ? size : size.replace(/px$/, '')
   return `${raw}px`
 }
-
-
 </script>
-
 
 <style scoped>
 .layer-panel.v-expansion-panel--active > .v-expansion-panel-title {
@@ -267,5 +272,10 @@ function formatLabelSize(size: string | number | null | undefined): string {
 .label-size {
   font-weight: 400;
   color: #aaa;
+}
+
+.label-preview-text {
+  font-weight: bold;
+  font-size: 14px;
 }
 </style>

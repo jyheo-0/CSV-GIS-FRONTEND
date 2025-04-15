@@ -45,18 +45,18 @@
     <div class="mb-6">
       <h4 class="mb-2">글자 색상</h4>
       <ColorSelector
-        :color="layer.labelColor"
-        @update-color="emit('update-label-color', $event)"
-      />
+  v-model:color="localFontColor"
+  @update-color="emit('update-label-color', $event)"
+/>
     </div>
 
     <!-- 라벨 테두리 색상 -->
     <div class="mb-6">
       <h4 class="mb-2">테두리 색상</h4>
       <ColorSelector
-        :color="layer.labelStrokeColor"
-        @update-color="emit('update-label-stroke-color', $event)"
-      />
+  v-model:color="localStrokeColor"
+  @update-color="emit('update-label-stroke-color', $event)"
+/>
     </div>
   </div>
 </template>
@@ -81,6 +81,11 @@ const emit = defineEmits<{
 const localLabelColumn = ref(props.layer.labelColumn ?? null)
 const localLabelSize = ref(Number(props.layer.labelSize ?? 14))
 
+const localFontColor = ref(props.layer.fontColor ?? '#000000') // 검정색
+const localStrokeColor = ref(props.layer.strokeColor ?? '#FFFFFF') // 흰색
+
+
+
 function onLabelChange(value: string) {
   emit('update-label-column', value === '(라벨 없음)' ? null : value)
 }
@@ -97,6 +102,15 @@ watch(() => props.layer.labelColumn, val => {
 watch(() => props.layer.labelSize, val => {
   localLabelSize.value = Number(val ?? 14)
 })
+
+watch(() => props.layer.fontColor, (val) => {
+  localFontColor.value = val ?? '#000000'
+})
+
+watch(() => props.layer.strokeColor, (val) => {
+  localStrokeColor.value = val ?? '#FFFFFF'
+})
+
 </script>
 
 <style scoped>
