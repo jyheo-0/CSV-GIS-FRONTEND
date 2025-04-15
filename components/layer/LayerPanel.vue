@@ -27,7 +27,21 @@
 
           <!-- 포인트 설정 -->
           <v-expansion-panel v-if="layer.geometryType === 'point'">
-            <v-expansion-panel-title>포인트 설정</v-expansion-panel-title>
+            <v-expansion-panel-title class="d-flex  align-center">
+              <div class="d-flex align-center">
+                포인트 설정
+              </div>
+              <div class="point-summary ml-auto">
+                  <img
+                :src="`/markers/${layer.markerType}.svg`"
+                :alt="layer.markerType"
+                class="marker-icon"
+              />
+                <span class="marker-size">{{ layer.size }}px</span>
+                <div class="marker-color" :style="{ backgroundColor: layer.baseColor }" />
+              </div>
+            </v-expansion-panel-title>
+
             <v-expansion-panel-text class="px-0 py-0">
               <PointSettings
                 :layer="layer"
@@ -94,13 +108,15 @@
   </v-expansion-panels>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+import LabelSettings from './LabelSettings.vue'
+import LocationSettings from './LocationSettings.vue'
 import PointSettings from './geometry/PointSettings.vue'
 import LineSettings from './geometry/LineSettings.vue'
 import PolygonSettings from './geometry/PolygonSettings.vue'
-import LabelSettings from './LabelSettings.vue'
-import LocationSettings from './LocationSettings.vue'
+// ✅ import geometryOptions
+import { geometryOptions } from '@/constants/geometryOptions'
 
 const columns = ['위도', '경도', '정류장명', '설치년도']
 
@@ -135,7 +151,13 @@ const layers = ref([
     filled: true
   }
 ])
+
+function getMarkerLabel(markerType: string) {
+  const found = geometryOptions.find(item => item.value === markerType)
+  return found ? found.label : '선택 안함'
+}
 </script>
+
 
 <style scoped>
 .layer-panel.v-expansion-panel--active > .v-expansion-panel-title {
@@ -153,5 +175,40 @@ const layers = ref([
 .sub-settings :deep(.v-expansion-panel-title) {
   font-weight: bold !important;
   font-size: 14px;
+}
+
+.point-summary {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  color: #ccc;
+}
+.marker-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.marker-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.marker-type {
+  font-weight: 500;
+  color: #ccc;
+}
+
+.marker-size {
+  font-weight: 400;
+  color: #aaa;
+}
+
+::v-deep(.v-expansion-panel-title__icon) {
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  margin-left: 8px !important;
 }
 </style>

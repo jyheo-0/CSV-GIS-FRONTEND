@@ -16,7 +16,7 @@
               @click="updateType(item)"
             >
               <img
-                :src="`/makers/${item.value}.svg`"
+                :src="`/markers/${item.value}.svg`"
                 alt="icon"
                 width="30"
                 height="30"
