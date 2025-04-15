@@ -153,6 +153,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { geometryOptions } from '@/constants/geometryOptions'
+import { presetColors } from '@/constants/presetColors'
 
 const props = defineProps({
   layer: Object,
@@ -162,12 +163,6 @@ const emit = defineEmits(['update-type', 'update-size', 'update-color'])
 
 const localSize = ref(props.layer.size ?? 50)
 const localColor = ref(props.layer.baseColor ?? '#ff6b6b')
-
-const presetColors = [
-'#ff6b6b', '#ffa94d', '#ffd43b',
-'#38b000', '#3bc9db', '#4c6ef5',
-'#845ef7', '#FFFFFF', '#000000'
-]
 
 const advancedEnabled = ref(false)
 const advancedColorEnabled = ref(false)
