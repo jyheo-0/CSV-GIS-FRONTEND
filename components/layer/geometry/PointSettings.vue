@@ -29,159 +29,129 @@
     </div>
 
     <!-- 마커 크기 -->
-<!-- 마커 크기 -->
-<div class="mb-6">
-  <h4 class="mb-2 text-sm">마커 크기</h4>
-
-  <v-slider
-    v-model="localSize"
-    :min="1"
-    :max="99"
-    :step="1"
-    hide-details
-    @update:model-value="emit('update-size', localSize)"
-  >
-    <template #append>
-      <v-text-field
+    <div class="mb-6">
+      <h4 class="mb-2 text-sm">마커 크기</h4>
+      <v-slider
         v-model="localSize"
-        @update:model-value="emit('update-size', localSize)"
-        density="compact"
-        style="width: 70px"
-        type="number"
+        :min="1"
+        :max="99"
+        :step="1"
         hide-details
-        single-line
+        @update:model-value="emit('update-size', localSize)"
+      >
+        <template #append>
+          <v-text-field
+            v-model="localSize"
+            @update:model-value="emit('update-size', localSize)"
+            density="compact"
+            style="width: 70px"
+            type="number"
+            hide-details
+            single-line
+          />
+        </template>
+      </v-slider>
+
+      <!-- 고급 설정 체크 -->
+      <v-checkbox
+        v-model="advancedEnabled"
+        label="고급 크기 설정 (X/Y/Z)"
+        hide-details
       />
-    </template>
-  </v-slider>
 
-  <!-- 고급 설정 체크 -->
-  <v-checkbox
-    v-model="advancedEnabled"
-    label="고급 크기 설정 (X/Y/Z)"
-    hide-details
-  />
+      <!-- 고급 설정 슬라이더 -->
+      <v-expand-transition>
+        <div v-show="advancedEnabled">
+          <v-slider v-model="layer.scaleX" label="X" :min="1" :max="99" :step="1">
+            <template #append>
+              <v-text-field
+                v-model="layer.scaleX"
+                maxlength="3"
+                type="number"
+                density="compact"
+                hide-details
+                single-line
+                style="width: 70px"
+              />
+            </template>
+          </v-slider>
 
-  <!-- 고급 설정 슬라이더 -->
-  <v-expand-transition>
-    <div v-show="advancedEnabled">
-      <v-slider v-model="layer.scaleX" label="X" :min="1" :max="99" :step="1" >
-        <template #append>
-          <v-text-field
-            v-model="layer.scaleX"
-            maxlength="3"
-            type="number"
-            density="compact"
-            hide-details
-            single-line
-            style="width: 70px"
-          />
-        </template>
-      </v-slider>
+          <v-slider v-model="layer.scaleY" label="Y" :min="1" :max="99" :step="1">
+            <template #append>
+              <v-text-field
+                v-model="layer.scaleY"
+                type="number"
+                density="compact"
+                hide-details
+                single-line
+                style="width: 70px"
+              />
+            </template>
+          </v-slider>
 
-      <v-slider v-model="layer.scaleY" label="Y" :min="1" :max="99" :step="1">
-        <template #append>
-          <v-text-field
-            v-model="layer.scaleY"
-            type="number"
-            density="compact"
-            hide-details
-            single-line
-            style="width: 70px"
-          />
-        </template>
-      </v-slider>
-
-      <v-slider v-model="layer.scaleZ" label="Z" :min="1" :max="99" :step="1">
-        <template #append>
-          <v-text-field
-            v-model="layer.scaleZ"
-            type="number"
-            density="compact"
-            hide-details
-            single-line
-            style="width: 70px"
-          />
-        </template>
-      </v-slider>
+          <v-slider v-model="layer.scaleZ" label="Z" :min="1" :max="99" :step="1">
+            <template #append>
+              <v-text-field
+                v-model="layer.scaleZ"
+                type="number"
+                density="compact"
+                hide-details
+                single-line
+                style="width: 70px"
+              />
+            </template>
+          </v-slider>
+        </div>
+      </v-expand-transition>
     </div>
-  </v-expand-transition>
-</div>
-
 
     <!-- 마커 색상 -->
-<!-- 마커 색상 -->
-<div class="mb-6">
-  <h4 class="mb-2">마커 색상</h4>
-
-  <!-- 프리셋 컬러 -->
-  <div class="d-flex flex-wrap gap-2 mb-2">
-    <div
-      v-for="color in presetColors"
-      :key="color"
-      :style="{ backgroundColor: color }"
-      class="color-circle"
-      :class="{ selected: color === localColor }"
-      @click="updateColor(color)"
-    />
-  </div>
-
-  <!-- 고급 설정 체크박스 -->
-  <v-checkbox
-    v-model="advancedColorEnabled"
-    label="색상 팔레트"
-    class="mt-1 no-details"
-  />
-
-  <!-- 고급 설정 (v-color-picker 전체 표시) -->
-  <v-expand-transition>
-    <div v-show="advancedColorEnabled" class="mt-2 color-picker-wrapper">
-      <v-color-picker
-        v-model:model-value="localColor"
-        @update:model-value="updateColor"
-        flat
-        hide-inputs="false"
-        hide-mode-switch="false"
-        class="w-100"
+    <div class="mb-6">
+      <h4 class="mb-2">마커 색상</h4>
+      <ColorSelector
+        :color="localColor"
+        @update-color="updateColor"
       />
     </div>
-  </v-expand-transition>
-</div>
-
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { geometryOptions } from '@/constants/geometryOptions'
-import { presetColors } from '@/constants/presetColors'
+import ColorSelector from '@/components/ColorSelector.vue'
 
-const props = defineProps({
-  layer: Object,
-  presetColors: Array,
-})
+const props = defineProps<{
+  layer: {
+    size?: number
+    scaleX?: number
+    scaleY?: number
+    scaleZ?: number
+    baseColor?: string
+    markerType?: string
+    [key: string]: any
+  }
+}>()
 const emit = defineEmits(['update-type', 'update-size', 'update-color'])
 
 const localSize = ref(props.layer.size ?? 50)
 const localColor = ref(props.layer.baseColor ?? '#ff6b6b')
-
 const advancedEnabled = ref(false)
-const advancedColorEnabled = ref(false)
 
+const { layer } = props
 
-watch(() => props.layer.size, val => localSize.value = val)
-watch(() => props.layer.baseColor, val => localColor.value = val)
-
-function updateType(item) {
+function updateType(item: { value: string }) {
   emit('update-type', item.value)
 }
-function updateColor(color) {
+function updateColor(color: string) {
   localColor.value = color
   emit('update-color', color)
 }
 
-const { layer } = props
+watch(() => props.layer.size, val => localSize.value = val ?? 50)
+watch(() => props.layer.baseColor, val => localColor.value = val ?? '#ff6b6b')
 
-// 고급 크기 설정 on 시, size → XYZ 복사
+
 watch(advancedEnabled, (val) => {
   if (val) {
     layer.scaleX = layer.size ?? 50
@@ -190,7 +160,6 @@ watch(advancedEnabled, (val) => {
   }
 })
 
-// 기본 크기 바뀌면 고급 크기도 갱신
 watch(() => layer.size, (newSize) => {
   if (advancedEnabled.value) {
     layer.scaleX = newSize
@@ -199,13 +168,11 @@ watch(() => layer.size, (newSize) => {
   }
 })
 
-// 색상 반영 (프리셋 자동 반영 보장)
 watchEffect(() => {
   if (!layer.baseColor) {
     layer.baseColor = '#ff6b6b'
   }
 })
-
 </script>
 
 <style scoped>
@@ -230,34 +197,5 @@ watchEffect(() => {
   margin-top: 2px;
   font-size: 12px;
   color: #ccc;
-}
-
-.color-circle {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  margin-left: 4px;
-  cursor: pointer;
-}
-.color-circle.selected {
-  border-color: #2196f3;
-}
-
-
-.color-picker-wrapper {
-  overflow: hidden;
-  width: 100%;
-  max-width: 100%;
-}
-
-.color-picker-wrapper :deep(.v-color-picker) {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box;
-  padding: 0;
-}
-.no-details .v-input__details {
-  display: none !important;
 }
 </style>

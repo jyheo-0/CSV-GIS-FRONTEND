@@ -80,7 +80,16 @@
 
           <!-- 라벨 설정 -->
           <v-expansion-panel>
-            <v-expansion-panel-title>라벨 설정</v-expansion-panel-title>
+            <v-expansion-panel-title class="d-flex align-center">
+              <div>라벨 설정</div>
+              <div class="label-summary ml-auto">
+                <span class="label-column">
+                  {{ layer.labelColumn ? layer.labelColumn : '사용 안 함' }}
+                </span>
+                <span class="label-size" v-if="layer.labelColumn">{{ formatLabelSize(layer.labelSize) }}</span>
+              </div>
+            </v-expansion-panel-title>
+
             <v-expansion-panel-text class="px-0 py-0">
               <LabelSettings
                 :layer="layer"
@@ -88,8 +97,8 @@
                 @update-label-column="layer.labelColumn = $event"
                 @update-label-size="layer.labelSize = $event"
               />
-            </v-expansion-panel-text>
-          </v-expansion-panel>
+              </v-expansion-panel-text>
+            </v-expansion-panel>
 
           <!-- 위치 설정 -->
           <v-expansion-panel>
@@ -120,9 +129,32 @@ import PolygonSettings from './geometry/PolygonSettings.vue'
 // ✅ import geometryOptions
 import { geometryOptions } from '@/constants/geometryOptions'
 
+
+interface Layer {
+  id: number
+  name: string
+  visible: boolean
+  geometryType: 'point' | 'line' | 'polygon'
+  markerType?: string
+  size?: number
+  baseColor?: string
+  scaleX?: number
+  scaleY?: number
+  scaleZ?: number
+  strokeColor?: string
+  lineWidth?: number
+  fillColor?: string
+  filled?: boolean
+  latColumn?: string
+  lngColumn?: string
+  labelColumn?: string | null
+  labelSize?: string | number
+}
+
+
 const columns = ['위도', '경도', '정류장명', '설치년도']
 
-const layers = ref([
+const layers = ref<Layer[]>([
   {
     id: 1,
     name: 'bus_stop.csv',
@@ -134,7 +166,7 @@ const layers = ref([
     latColumn: '위도',
     lngColumn: '경도',
     labelColumn: '정류장명',
-    labelSize: '14px'
+    labelSize: '14'
   },
   {
     id: 2,
@@ -158,6 +190,14 @@ function getMarkerLabel(markerType: string) {
   const found = geometryOptions.find(item => item.value === markerType)
   return found ? found.label : '선택 안함'
 }
+
+function formatLabelSize(size: string | number | null | undefined): string {
+  if (size == null) return ''
+  const raw = typeof size === 'number' ? size : size.replace(/px$/, '')
+  return `${raw}px`
+}
+
+
 </script>
 
 
@@ -212,5 +252,20 @@ function getMarkerLabel(markerType: string) {
   padding-left: 4px !important;
   padding-right: 4px !important;
   margin-left: 8px !important;
+}
+
+.label-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #ccc;
+}
+.label-column {
+  font-weight: 500;
+}
+.label-size {
+  font-weight: 400;
+  color: #aaa;
 }
 </style>
