@@ -12,7 +12,7 @@
           >
             <v-card
               class="icon-thumb"
-              :class="{ selected: layer.type === item.value }"
+              :class="{ selected: layer.markerType === item.value }"
               @click="updateType(item)"
             >
               <img
@@ -129,7 +129,7 @@
   <v-checkbox
     v-model="advancedColorEnabled"
     label="색상 팔레트"
-    class="mt-1"
+    class="mt-1 no-details"
   />
 
   <!-- 고급 설정 (v-color-picker 전체 표시) -->
@@ -273,5 +273,7 @@ watchEffect(() => {
   box-sizing: border-box;
   padding: 0;
 }
-
+.no-details .v-input__details {
+  display: none !important;
+}
 </style>
