@@ -59,13 +59,12 @@
     v-model="advancedEnabled"
     label="고급 크기 설정 (X/Y/Z)"
     hide-details
-    class="mt-2"
   />
 
   <!-- 고급 설정 슬라이더 -->
   <v-expand-transition>
-    <div v-show="advancedEnabled" class="mt-2">
-      <v-slider v-model="layer.scaleX" label="X" :min="1" :max="99" :step="1" class="mb-2">
+    <div v-show="advancedEnabled">
+      <v-slider v-model="layer.scaleX" label="X" :min="1" :max="99" :step="1" >
         <template #append>
           <v-text-field
             v-model="layer.scaleX"
@@ -79,7 +78,7 @@
         </template>
       </v-slider>
 
-      <v-slider v-model="layer.scaleY" label="Y" :min="1" :max="99" :step="1" class="mb-2">
+      <v-slider v-model="layer.scaleY" label="Y" :min="1" :max="99" :step="1">
         <template #append>
           <v-text-field
             v-model="layer.scaleY"
@@ -172,13 +171,13 @@ const geometryOptions = [
   { value: 'icon', label: '아이콘' }
 ]
 
-const localSize = ref(props.layer.size || 10)
-const localColor = ref(props.layer.baseColor || '#000000')
+const localSize = ref(props.layer.size ?? 50)
+const localColor = ref(props.layer.baseColor ?? '#ff6b6b')
 
 const presetColors = [
 '#ff6b6b', '#ffa94d', '#ffd43b',
 '#38b000', '#3bc9db', '#4c6ef5',
-'#845ef7','#FFFFFF', '#000000'
+'#845ef7', '#FFFFFF', '#000000'
 ]
 
 const advancedEnabled = ref(false)
@@ -195,6 +194,34 @@ function updateColor(color) {
   localColor.value = color
   emit('update-color', color)
 }
+
+const { layer } = props
+
+// 고급 크기 설정 on 시, size → XYZ 복사
+watch(advancedEnabled, (val) => {
+  if (val) {
+    layer.scaleX = layer.size ?? 50
+    layer.scaleY = layer.size ?? 50
+    layer.scaleZ = layer.size ?? 50
+  }
+})
+
+// 기본 크기 바뀌면 고급 크기도 갱신
+watch(() => layer.size, (newSize) => {
+  if (advancedEnabled.value) {
+    layer.scaleX = newSize
+    layer.scaleY = newSize
+    layer.scaleZ = newSize
+  }
+})
+
+// 색상 반영 (프리셋 자동 반영 보장)
+watchEffect(() => {
+  if (!layer.baseColor) {
+    layer.baseColor = '#ff6b6b'
+  }
+})
+
 </script>
 
 <style scoped>
@@ -230,7 +257,7 @@ function updateColor(color) {
   cursor: pointer;
 }
 .color-circle.selected {
-  border-color: white;
+  border-color: #2196f3;
 }
 
 

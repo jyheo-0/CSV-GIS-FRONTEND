@@ -11,26 +11,13 @@
       <!-- Step 2 -->
       <template v-slot:item.2>
         <v-card flat title="설정" class="pa-4 mb-4">
-          <p>샘플 데이터 5줄 (가짜)</p>
-          <v-simple-table dense>
-            <thead>
-              <tr><th>열1</th><th>열2</th><th>열3</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>1</td><td>2</td><td>3</td></tr>
-              <tr><td>4</td><td>5</td><td>6</td></tr>
-              <tr><td>7</td><td>8</td><td>9</td></tr>
-              <tr><td>10</td><td>11</td><td>12</td></tr>
-              <tr><td>13</td><td>14</td><td>15</td></tr>
-            </tbody>
-          </v-simple-table>
+          <p>샘플 데이터</p>
         </v-card>
       </template>
 
       <!-- Step 3 -->
       <template v-slot:item.3>
         <v-card flat title="클라우드 변환" class="pa-4 mb-4">
-          <p>이제 지도 보러 가자~</p>
           <v-btn color="success" @click="navigateTo('/map-edit')">지도 보기로 이동</v-btn>
         </v-card>
       </template>

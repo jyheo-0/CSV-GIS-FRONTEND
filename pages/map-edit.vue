@@ -8,7 +8,7 @@
       />
     </div>
 
-    <!-- Sidebar - toggle 방식 / LeftNav 다음에 붙어서 나와야 하므로 absolute X, margin-left 적용 -->
+    <!-- Sidebar - toggle 방식 -->
     <v-navigation-drawer
       v-model="layerPanelOpen"
       app

@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import LayerPanel from './LayerPanel.vue'
+import LayerPanel from './layer/LayerPanel.vue'
 </script>
 
 <style scoped>
