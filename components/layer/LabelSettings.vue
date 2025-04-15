@@ -5,7 +5,7 @@
       <h4 class="mb-2">라벨 컬럼</h4>
       <v-select
         v-model="localLabelColumn"
-        :items="['(라벨 없음)', ...columns]"
+        :items="['(사용 안 함)', ...columns]"
         density="compact"
         hide-details
         @update:modelValue="onLabelChange"
@@ -42,21 +42,21 @@
     </div>
 
     <!-- 라벨 색상 -->
-    <div class="mb-6">
+    <div class="mb-6" v-if="localLabelColumn !== '(사용 안 함)' && !!localLabelColumn">
       <h4 class="mb-2">글자 색상</h4>
       <ColorSelector
-  v-model:color="localFontColor"
-  @update-color="emit('update-label-color', $event)"
-/>
+        v-model:color="localFontColor"
+        @update-color="emit('update-label-color', $event)"
+      />
     </div>
 
     <!-- 라벨 테두리 색상 -->
-    <div class="mb-6">
+    <div class="mb-6" v-if="localLabelColumn !== '(사용 안 함)' && !!localLabelColumn">
       <h4 class="mb-2">테두리 색상</h4>
       <ColorSelector
-  v-model:color="localStrokeColor"
-  @update-color="emit('update-label-stroke-color', $event)"
-/>
+        v-model:color="localStrokeColor"
+        @update-color="emit('update-label-stroke-color', $event)"
+      />
     </div>
   </div>
 </template>
@@ -78,7 +78,7 @@ const emit = defineEmits<{
   (e: 'update-label-stroke-color', value: string): void
 }>()
 
-const localLabelColumn = ref(props.layer.labelColumn ?? '(라벨 없음)')
+const localLabelColumn = ref(props.layer.labelColumn ?? '(사용 안 함)')
 const localLabelSize = ref(Number(props.layer.labelSize ?? 14))
 
 const localFontColor = ref(props.layer.fontColor ?? '#000000') // 검정색
@@ -87,7 +87,7 @@ const localStrokeColor = ref(props.layer.strokeColor ?? '#FFFFFF') // 흰색
 
 
 function onLabelChange(value: string) {
-  emit('update-label-column', value === '(라벨 없음)' ? null : value)
+  emit('update-label-column', value === '(사용 안 함)' ? null : value)
 }
 
 function clampLabelSize() {
@@ -97,7 +97,7 @@ function clampLabelSize() {
 }
 
 watch(() => props.layer.labelColumn, val => {
-  localLabelColumn.value = val ?? '(라벨 없음)'
+  localLabelColumn.value = val ?? '(사용 안 함)'
 })
 watch(() => props.layer.labelSize, val => {
   localLabelSize.value = Number(val ?? 14)
