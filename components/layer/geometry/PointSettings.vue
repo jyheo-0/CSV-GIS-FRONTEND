@@ -46,8 +46,11 @@
             density="compact"
             style="width: 70px"
             type="number"
+            :min="1"
+            :max="99"
             hide-details
             single-line
+            @blur="clampSize"
           />
         </template>
       </v-slider>
@@ -66,12 +69,14 @@
             <template #append>
               <v-text-field
                 v-model="layer.scaleX"
-                maxlength="3"
                 type="number"
                 density="compact"
                 hide-details
                 single-line
                 style="width: 70px"
+                :min="1"
+                :max="99"
+                @blur="clampScale('X')"
               />
             </template>
           </v-slider>
@@ -85,6 +90,9 @@
                 hide-details
                 single-line
                 style="width: 70px"
+                :min="1"
+                :max="99"
+                @blur="clampScale('Y')"
               />
             </template>
           </v-slider>
@@ -98,6 +106,9 @@
                 hide-details
                 single-line
                 style="width: 70px"
+                :min="1"
+                :max="99"
+                @blur="clampScale('Z')"
               />
             </template>
           </v-slider>
@@ -117,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, watchEffect } from 'vue'
 import { geometryOptions } from '@/constants/geometryOptions'
 import ColorSelector from '@/components/ColorSelector.vue'
 
@@ -148,9 +159,21 @@ function updateColor(color: string) {
   emit('update-color', color)
 }
 
+function clampSize() {
+  if (localSize.value < 1) localSize.value = 1
+  if (localSize.value > 99) localSize.value = 99
+  emit('update-size', localSize.value)
+}
+
+function clampScale(axis: 'X' | 'Y' | 'Z') {
+  const key = `scale${axis}` as keyof typeof layer
+  if (layer[key] === undefined) return
+  if (layer[key]! < 1) layer[key] = 1
+  if (layer[key]! > 99) layer[key] = 99
+}
+
 watch(() => props.layer.size, val => localSize.value = val ?? 50)
 watch(() => props.layer.baseColor, val => localColor.value = val ?? '#ff6b6b')
-
 
 watch(advancedEnabled, (val) => {
   if (val) {

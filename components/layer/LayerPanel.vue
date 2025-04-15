@@ -83,15 +83,15 @@
               <div>라벨 설정</div>
               <div class="label-summary ml-auto">
                 <span
-  class="label-preview-text"
-  :style="layer.labelColumn ? {
-    color: layer.labelColor ?? '#000000',
-    WebkitTextStroke: `1px ${layer.labelStrokeColor ?? '#ffffff'}`
-  } : {}"
->
-  {{ layer.labelColumn ? layer.labelColumn : '사용 안 함' }}
-</span>
-                <span class="label-size" v-if="layer.labelColumn">
+                  class="label-preview-text"
+                  :style="layer.labelColumn ? {
+                    color: layer.labelColor ?? '#000000',
+                    WebkitTextStroke: `1px ${layer.labelStrokeColor ?? '#ffffff'}`
+                  } : {}"
+                >
+                  {{ layer.labelColumn ? layer.labelColumn : '사용 안 함' }}
+                </span>
+                                <span class="label-size" v-if="layer.labelColumn">
                   {{ formatLabelSize(layer.labelSize) }}
                 </span>
               </div>
