@@ -14,7 +14,7 @@
     </div>
 
     <!-- 라벨 크기 -->
-    <div class="mb-6">
+    <div class="mb-6" v-if="localLabelColumn !== '(사용 안 함)' && !!localLabelColumn">
       <h4 class="mb-2">폰트 크기</h4>
       <v-slider
         v-model="localLabelSize"

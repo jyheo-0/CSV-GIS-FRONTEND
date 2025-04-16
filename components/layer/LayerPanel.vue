@@ -6,7 +6,6 @@
       elevation="1"
       class="layer-panel"
     >
-      <!-- ✅ 상위: 칩 오른쪽 끝 정렬되도록 감싸줌 -->
       <v-expansion-panel-title>
         <div class="d-flex justify-space-between align-center w-100">
           <div class="d-flex align-center">
@@ -17,7 +16,7 @@
               :icon="layer.visible ? 'mdi-eye' : 'mdi-eye-off'"
               :color="layer.visible ? 'light-grey' : 'grey'"
             />
-            {{ layer.name }}
+              <EditableTitle :name="layer.name" @rename="layer.name = $event" />
           </div>
           <v-chip size="small" color="primary" variant="tonal">
             {{ layer.geometryType.toUpperCase() }}
@@ -27,6 +26,19 @@
 
       <v-expansion-panel-text class="pt-1">
         <v-expansion-panels multiple class="sub-settings">
+
+          <!-- 레이어 속성 설정 -->
+          <v-expansion-panel>
+            <v-expansion-panel-title>레이어 속성</v-expansion-panel-title>
+            <v-expansion-panel-text class="px-0 py-0">
+              <LayerMetadataSettings
+                :layer="layer"
+                @delete="handleDelete(layer.id)"
+                @export="handleExport(layer.id)"
+                @preview="handlePreview(layer.id)"
+              />
+            </v-expansion-panel-text>
+          </v-expansion-panel>
 
           <!-- 포인트 설정 -->
           <v-expansion-panel v-if="layer.geometryType === 'point'">
@@ -91,7 +103,7 @@
                 >
                   {{ layer.labelColumn ? layer.labelColumn : '사용 안 함' }}
                 </span>
-                                <span class="label-size" v-if="layer.labelColumn">
+                <span class="label-size" v-if="layer.labelColumn">
                   {{ formatLabelSize(layer.labelSize) }}
                 </span>
               </div>
@@ -128,9 +140,12 @@
   </v-expansion-panels>
 </template>
 
+
 <script setup lang="ts">
 import { ref } from 'vue'
 import LabelSettings from './LabelSettings.vue'
+import EditableTitle from './EditableTitle.vue'
+import LayerMetadataSettings from './LayerMetadataSettings.vue'
 import LocationSettings from './LocationSettings.vue'
 import PointSettings from './geometry/PointSettings.vue'
 import LineSettings from './geometry/LineSettings.vue'
