@@ -1,0 +1,670 @@
+/*********************************************************
+ *	엔진파일 로드 후 Module 객체가 생성되며,
+ *  Module 객체를 통해 API 클래스에 접근 할 수 있습니다. 
+ *	 - Module.postRun : 엔진파일 로드 후 실행할 함수를 연결합니다.
+ *	 - Module.canvas : 지도를 표시할 canvas 엘리먼트를 연결합니다.
+ *********************************************************/
+ 
+var Module = {
+	preRun: [],
+    postRun: [init],
+	canvas: (function() {
+		
+		var canvas = document.createElement('canvas');
+		
+		canvas.id = "canvas";
+		canvas.width="calc(100%)";
+		canvas.height="100%";
+		
+		canvas.style.position = "fixed";
+		canvas.style.top = "0px";
+		canvas.style.left = "0px";
+		canvas.setAttribute('tabindex', '-1');
+		
+		canvas.getContext("application/wasm", {preserveDrawingBuffer: true});
+		
+		document.body.appendChild(canvas);
+		
+		canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+		
+		return canvas;
+		
+	})()
+};
+
+/* 엔진 로드 후 실행할 초기화 함수(Module.postRun) */
+function init() {
+	console.log('🧭 XDWorld init() 실행됨')
+	Module.SetProxy("http://www.xdmap.com:8080/Landscape/js/proxy.jsp?url=");
+	Module.SetEncodingVWorldDEM(true);
+	
+	Module.initialize({
+		container: document.getElementById("MapContainer"),
+		terrain : {
+			dem : {
+				url : "http://xdworld.vworld.kr:8080",
+				name : "dem",
+				servername : "XDServer3d",
+				encoding : true
+			},
+			image : {
+				url : "http://xdworld.vworld.kr:8080",
+				name : "tile_mo_HD",
+				servername : "XDServer3d"
+			},
+		},
+		worker : {
+				path : "./XDWorldWorker.js",
+				count : 3,
+				use : true,
+			},
+		defaultKey : "DFG~EpIREQDmdJe1E9QpdBca#FBSDJFmdzHoe(fB4!e1E(JS1I=="
+	});
+	
+	Module.SetMobileMode(2);
+	
+	initPage();
+	
+	Module.getViewCamera().moveLonLatAlt(127.886114, 36.140026, 150000, true);
+	
+	Module.getViewCamera().setTilt(50.0);
+	
+	Module.getOption().setTextureCapacityLimit(false);
+	
+	Module.getOption().setPickingCalculateType(1);
+}
+
+
+/*********************** 아래부터 API 테스트 영역 입니다 ********************************************/
+
+var GLOBAL = {
+	Layer : null,
+	Pipe : null,
+	totalArea : false,
+	strShape : "sphere",
+	selectindex : [],
+	positions : [],
+	values : [],
+	statistic : null,
+	tilePositions: Array.from({ length: 10 }, () => ({ positions: [], values: [] })),// 10개 구역 초기화
+	clustersPoints: [], // 클러스터링
+	clustersValues: [] // 클러스터링
+};
+
+function initPage() {
+
+	initEvent(Module.canvas);	
+	/*
+	var layer = Module.getTileLayerList().createXDServerLayer({
+		url : "https://xdworld.vworld.kr",
+		servername : "XDServer3d",
+		name : "facility_build",
+		type : 9,
+		minLevel : 0,
+		maxLevel : 15
+	});
+	*/
+	
+	Module.setRemoveVertexMemory(false);
+	
+	// 지형 밑에 들어갈 수 있게
+	var Camera = Module.getViewCamera();
+	Camera.setPermitUnderGround(true);
+	Camera.setLimitTilt(-88.0);
+	Camera.setLimitAltitude(-1000.0);
+	
+	GLOBAL.statistic = Module.getStatistic();
+}
+
+function initEvent(_canvas) {
+	
+	var mainDiv = document.getElementById("DV_Main");
+	mainDiv.onmouseover = function() {
+		Module.XDIsMouseOverDiv(true);
+		//console.log("Mouse Over");
+	};
+	mainDiv.onmouseout = function() {
+		Module.XDIsMouseOverDiv(false);
+		//console.log("Mouse Out");
+	};
+	
+	_canvas.addEventListener("contextmenu", function(e){
+		e.preventDefault();
+	});
+	
+	_canvas.addEventListener("Fire_MouseDown", function(e){
+		var strPosition = Module.GetClickPosition();
+		//console.log(strPosition);
+		var strArray = strPosition.split('_');
+
+		var pMap = Module.getMap();
+		if(e.nButton==1)
+		{
+			pMap.addHeatMap(new Module.JSVector3D(parseFloat(strArray[0]), parseFloat(strArray[1]), parseFloat(strArray[2])));
+		}
+		else if(e.nButton==2)
+		{
+			pMap.addHeatMap3D(new Module.JSVector2D(parseFloat(strArray[0]), parseFloat(strArray[1])));
+		}
+	});
+};
+
+function removeAll()
+{
+	GLOBAL.statistic.removeAll();
+	GLOBAL.totalArea = false;
+	GLOBAL.selectindex = [];
+}
+
+// **좌표 변환 함수**
+function convertToWGS84(x, y) {
+	proj4.defs("EPSG:2097", "+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=500000 +ellps=bassel +units=m +no_defs +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43");
+    return proj4("EPSG:2097", "EPSG:4326", [x, y]); // 결과: [경도, 위도]
+}
+
+function parseCSVLine(line) {
+    const result = [];
+    let current = "";
+    let insideQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+
+        if (char === '"' && (i === 0 || line[i - 1] !== "\\")) {
+            insideQuotes = !insideQuotes;
+        } else if (char === "," && !insideQuotes) {
+            result.push(current.trim() || null); // 빈 값이면 null 저장
+            current = "";
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim()); // 마지막 값 추가
+    return result;
+}
+
+async function parseLargeCSV(_type) {
+	if(_type > 2) return;
+
+	GLOBAL.positions = [];
+	GLOBAL.values = [];
+
+	var nStart = new Date().getTime();
+
+	var response;
+	if(_type == 0) response = await fetch("./csv/fulldata_07_24_04_P_일반음식점.csv");	// 100만개
+	else if(_type == 1) response = await fetch("./csv/소방청_소방용수시설_20240207.csv");	// 20만개;
+	else if(_type == 2) response = await fetch("./csv/fulldata_01_01_06_P_약국.csv");	// 6만개;
+
+	const contentLength = response.headers.get("Content-Length"); // 전체 파일 크기 (바이트 단위)
+    const totalSize = contentLength ? parseInt(contentLength, 10) : null;
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("euc-kr"); // euc-kr 인코딩 지정
+    let { value: chunk, done } = await reader.read();
+    let buffer = "";
+	let loadedSize = 0; // 현재까지 로드된 바이트 수
+    let firstLine = true;
+    let headers = [];
+
+	let xIndex, yIndex, sizeIndex;
+    while (!done) {
+		loadedSize += chunk.length;
+        buffer += decoder.decode(chunk, { stream: true });
+        let lines = buffer.split("\n");
+
+        buffer = lines.pop(); // 마지막 줄은 아직 완성되지 않았을 수도 있으니 보류
+
+        for (let line of lines) {
+			let columns = parseCSVLine(line); // 정규식 기반 CSV 파싱
+            if (firstLine) {
+                headers = columns.map(col => col.replace(/^\uFEFF/, "").trim()); // BOM 제거 후 저장
+                firstLine = false;
+            } else {
+				if(_type == 0) {
+					xIndex = headers.findIndex(h => h.includes("좌표정보x"));	// 26
+					yIndex = headers.findIndex(h => h.includes("좌표정보y"));	// 27
+					sizeIndex = headers.findIndex(h => h.includes("시설총규모"));	// 43
+				}
+				else if(_type == 1) {
+					xIndex = headers.findIndex(h => h.includes("경도"));	// 8
+					yIndex = headers.findIndex(h => h.includes("위도"));	// 7
+					sizeIndex = headers.findIndex(h => h.includes("설치연도"));	// 12
+				}
+				else if(_type == 2) {
+					xIndex = headers.findIndex(h => h.includes("좌표정보x"));	// 26
+					yIndex = headers.findIndex(h => h.includes("좌표정보y"));	// 27
+					sizeIndex = headers.findIndex(h => h.includes("약국영업면적"));	// 28
+				}
+				let x = columns[xIndex] ? parseFloat(columns[xIndex]) : null;
+                let y = columns[yIndex] ? parseFloat(columns[yIndex]) : null;
+                let size = columns[sizeIndex] ? columns[sizeIndex] : null;
+
+                if (x !== null && y !== null) {
+					if(_type == 0 || _type == 2) {
+						let [lon, lat] = convertToWGS84(x, y); // EPSG:5174 → WGS84 변환
+                    	GLOBAL.positions.push([lon, lat, 100]); // 변환된 경위도 좌표 저장
+					}
+
+					else if(_type == 1) GLOBAL.positions.push([x, y, 100]); // 변환된 경위도 좌표 저장
+                }
+                if (size !== null) {
+					if(size <= 0) size = 1;
+					if(size < 10) size = size * 100000;
+					if(size < 100) size = size * 10000;
+					if(size < 1000) size = size * 1000;
+					if(size < 10000) size = size * 100;
+					if(size < 100000) size = size * 10;
+                    GLOBAL.values.push(size);
+                }
+            }
+        }
+		// 프로그레스 업데이트
+		let percent = ((loadedSize / totalSize) * 100).toFixed(2);
+        //console.log(`진행률: ${percent}%`);
+
+		if(_type == 0) document.getElementById('prograss_3').innerText = percent + "%";
+		else if(_type == 1) document.getElementById('prograss_2').innerText = percent + "%";
+		else if(_type == 2) document.getElementById('prograss_1').innerText = percent + "%";
+
+        ({ value: chunk, done } = await reader.read());
+    }
+	var nEnd = new Date().getTime();
+	const time = nEnd - nStart;
+
+	if(_type == 0) document.getElementById('timer_3').innerText = time/1000 + "초";
+	else if(_type == 1) document.getElementById('timer_2').innerText = time/1000 + "초";
+	else if(_type == 2) document.getElementById('timer_1').innerText = time/1000 + "초";
+	
+    //console.log("positions:", GLOBAL.positions);
+	//console.log("values:", GLOBAL.values);
+	//alert("csv parsing 완료");
+
+	// GLOBAL.positions 영역 분할
+	if(_type == 0) divideIntoTiles();
+}
+
+/////////////////////////////////////////// 대용량 데이터 ///////////////////////////////////////////
+// 최소/최대 경도(lon)와 위도(lat) 찾기
+function getBounds(positions) {
+    let minLon = Infinity, maxLon = -Infinity;
+    let minLat = Infinity, maxLat = -Infinity;
+
+    positions.forEach(([lon, lat]) => {
+        if (lon < minLon) minLon = lon;
+        if (lon > maxLon) maxLon = lon;
+        if (lat < minLat) minLat = lat;
+        if (lat > maxLat) maxLat = lat;
+    });
+
+    return { minLon, maxLon, minLat, maxLat };
+}
+
+// 좌표를 10개의 구역으로 분할하여 정리
+function divideIntoTiles() {
+    const { minLon, maxLon, minLat, maxLat } = getBounds(GLOBAL.positions);
+    
+    let lonStep = (maxLon - minLon) / 5;  // 경도를 5개 구역으로 나눔
+    let latStep = (maxLat - minLat) / 2;  // 위도를 2개 구역으로 나눔
+
+    GLOBAL.positions.forEach(([lon, lat], index) => {
+        let value = GLOBAL.values[index] || null; // 값이 없을 경우 null 저장
+
+        // 좌표가 속한 타일 인덱스 계산 (0~9)
+        let lonIndex = Math.min(4, Math.floor((lon - minLon) / lonStep));
+        let latIndex = Math.min(1, Math.floor((lat - minLat) / latStep));
+        let tileIndex = latIndex * 5 + lonIndex; // 0~9 범위
+
+        // 해당 타일에 좌표와 값 분리 저장
+        GLOBAL.tilePositions[tileIndex].positions.push([lon, lat, 200]); // 좌표만 저장
+        GLOBAL.tilePositions[tileIndex].values.push(value); // 값만 저장
+    });
+
+    console.log(GLOBAL.tilePositions);
+
+	document.getElementById("index_1").value = GLOBAL.tilePositions[5].positions.length + "개"; 
+	document.getElementById("index_2").value = GLOBAL.tilePositions[6].positions.length + "개"; 
+	document.getElementById("index_3").value = GLOBAL.tilePositions[7].positions.length + "개"; 
+	document.getElementById("index_4").value = GLOBAL.tilePositions[8].positions.length + "개"; 
+	document.getElementById("index_5").value = GLOBAL.tilePositions[9].positions.length + "개"; 
+	document.getElementById("index_6").value = GLOBAL.tilePositions[0].positions.length + "개"; 
+	document.getElementById("index_7").value = GLOBAL.tilePositions[1].positions.length + "개"; 
+	document.getElementById("index_8").value = GLOBAL.tilePositions[2].positions.length + "개"; 
+	document.getElementById("index_9").value = GLOBAL.tilePositions[3].positions.length + "개"; 
+	document.getElementById("index_10").value = GLOBAL.tilePositions[4].positions.length + "개"; 
+}
+
+function loadTilingPositionData(_area)
+{
+	if(_area == 100) {
+		GLOBAL.totalArea = true;
+	}
+	if(GLOBAL.strShape=='symbol') {
+		loadLargeSymbol("./3ds/tree.3ds");
+		return;
+	}
+
+	if(_area == 100) {
+		GLOBAL.selectindex = [];
+		GLOBAL.statistic.removeAll();
+
+		console.log(GLOBAL.strShape);
+
+		var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : strShape,
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				},
+			]
+		}
+		var statistic = Module.getStatistic();
+		const json = JSON.stringify(dataInfo);
+		statistic.createByJSON(json); 
+		
+	}
+	else {
+		if(GLOBAL.totalArea) return;
+		
+		GLOBAL.totalArea = false;
+		GLOBAL.selectindex.push(_area);
+		var dataInfo = {
+			key : "Test",
+			type : "position",
+			shape : GLOBAL.strShape,
+			position : GLOBAL.tilePositions[_area].positions,
+			value : GLOBAL.tilePositions[_area].values,
+			weight : [100.0, 100.0, 100.0],
+		}
+		
+		
+		GLOBAL.statistic.create(dataInfo);
+	}
+}
+
+function loadIconType(_strFile)
+{
+	fetch(_strFile)
+	  .then(res => res.arrayBuffer())
+	  .then(buffer => {
+		let binary = '';
+		const bytes = new Uint8Array(buffer);
+		for (let b of bytes) binary += String.fromCharCode(b);
+		const base64 = btoa(binary);
+		console.log(base64);
+		
+		var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : "icon",
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				image :  {
+					base64 : base64,
+					},
+				},
+			]
+		}
+		
+		var statistic = Module.getStatistic();
+		const json = JSON.stringify(dataInfo);
+		statistic.createByJSON(json); 
+	});
+}
+
+function changeShapeType(_nIndex)
+{
+	if(_nIndex == 0) GLOBAL.strShape = "vertical_line";
+	else if(_nIndex == 1) GLOBAL.strShape = "cylinder";
+	else if(_nIndex == 2) GLOBAL.strShape = "circle";
+	else if(_nIndex == 3) GLOBAL.strShape = "sphere";
+	else if(_nIndex == 4) {
+		GLOBAL.strShape = "symbol";
+		loadLargeSymbol("./3ds/tree.3ds");
+		return;
+	}
+	else if(_nIndex == 6) {
+		GLOBAL.strShape = "icon";
+		loadIconType("./images/config_users.png");
+		return;
+	}
+
+	var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : "symbol",
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [0.1, 0.1, 0.1],
+				},
+			]
+		}
+	
+	const json = JSON.stringify(dataInfo);
+	console.log(json);
+	GLOBAL.statistic.createByJSON(json);
+}
+
+function loadLargeSymbol(_strFile)
+{
+	fetch(_strFile)
+	  .then(res => res.arrayBuffer())
+	  .then(buffer => {
+		let binary = '';
+		const bytes = new Uint8Array(buffer);
+		for (let b of bytes) binary += String.fromCharCode(b);
+		const base64 = btoa(binary);
+		console.log(base64);
+		
+		var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : "symbol",
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				symbol : { 
+					data : base64, 
+					type : "3ds",
+					},
+				},
+			]
+		}
+		
+		var statistic = Module.getStatistic();
+		const json = JSON.stringify(dataInfo);
+		statistic.createByJSON(json); 
+	});
+}
+
+function clustering(_type)
+{
+	GLOBAL.statistic.removeAll();
+	var nStart = new Date().getTime();
+
+	// Kd-tree 인덱스를 생성 (위도, 경도 데이터를 사용)
+    const index = new KDBush(GLOBAL.positions, p => p[0], p => p[1]);
+
+	let visited = new Set();
+
+	for (let i = 0; i < GLOBAL.positions.length; i++) {
+		if (visited.has(i)) continue;
+
+		let clusterPoints = [];
+		let clusterValues = [];
+		let sumLon = 0, sumLat = 0, sumValues = 0;
+
+		let [lon1, lat1] = GLOBAL.positions[i];
+
+		// 🚀 Kd-tree를 사용하여 1km 반경 내 점들을 빠르게 검색
+		let nearby = index.within(lon1, lat1, 1);
+
+		for (let j of nearby) {
+			if (!visited.has(j)) {
+				let [lon2, lat2] = GLOBAL.positions[j];
+
+				if (getDistance(lon1, lat1, lon2, lat2) <= 1) { // 1km 이내
+					clusterPoints.push(GLOBAL.positions[j]);
+					clusterValues.push(GLOBAL.values[j]);
+					sumLon += lon2;
+					sumLat += lat2;
+					sumValues += GLOBAL.values[j];
+					visited.add(j);
+				}
+			}
+		}
+
+		let clusterSize = clusterPoints.length;
+		if (clusterSize > 0) {
+			let centroidLon = sumLon / clusterSize;
+			let centroidLat = sumLat / clusterSize;
+			//let averageValue = sumValues / clusterSize;
+			GLOBAL.clustersPoints.push([centroidLon, centroidLat, 200]);
+			GLOBAL.clustersValues.push(GLOBAL.values[i]);
+		}
+
+		// 진행률 계산 (현재 인덱스를 전체 길이로 나누기)
+        let percent = Math.floor(((i + 1) / GLOBAL.positions.length) * 100);
+
+		if(_type == 1) document.getElementById('cluster_prograss_1').innerText = percent + "%";
+		else if(_type == 2) document.getElementById('cluster_prograss_2').innerText = percent + "%";
+		else if(_type == 3) document.getElementById('cluster_prograss_3').innerText = percent + "%";
+	}
+
+	var nEnd = new Date().getTime();
+	const time = nEnd - nStart;
+
+	if(_type == 1) {
+		document.getElementById('cluster_timer_1').innerText = time + "초";
+		document.getElementById('cluster_prograss_1').innerText = "100%";
+		document.getElementById('clustercount_1').innerText = GLOBAL.clustersPoints.length + "개";
+	} else if(_type == 2) {
+		document.getElementById('cluster_timer_2').innerText = time + "초";
+		document.getElementById('cluster_prograss_2').innerText = "100%";
+		document.getElementById('clustercount_2').innerText = GLOBAL.clustersPoints.length + "개";
+	} else if(_type == 3) {
+		document.getElementById('cluster_timer_3').innerText = time + "초";
+		document.getElementById('cluster_prograss_3').innerText = "100%";
+		document.getElementById('clustercount_3').innerText = GLOBAL.clustersPoints.length + "개";
+	}
+}
+
+// 1km 이내인지 확인하는 거리 계산 (Haversine 공식 사용)
+function getDistance(lon1, lat1, lon2, lat2) {
+    const R = 6371; // 지구 반지름 (km)
+    const toRad = deg => deg * (Math.PI / 180);
+    
+    let dLat = toRad(lat2 - lat1);
+    let dLon = toRad(lon2 - lon1);
+
+    let a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // 거리 (km)
+}
+
+function removeCruster()
+{
+	GLOBAL.statistic.removeAll();
+	GLOBAL.clustersPoints = [];
+	GLOBAL.clustersValues = [];
+}
+/////////////////////////////////////////// 대용량 데이터 ///////////////////////////////////////////
+
+/////////////////////////////////////////// 일반 데이터 ///////////////////////////////////////////
+function loadPositionData(_nIndex)
+{
+	GLOBAL.statistic.removeAll();
+	GLOBAL.totalArea = false;
+
+	var strShape;
+	if(_nIndex == 0) strShape = "vertical_line";
+	else if(_nIndex == 1) strShape = "cylinder";
+	else if(_nIndex == 2) strShape = "circle";
+	else if(_nIndex == 3) strShape = "sphere";
+	else if(_nIndex == 4) {
+		loadSymbol("./3ds/tree.3ds");
+		return;
+	}
+	else if(_nIndex == 6) {
+		loadIconType("./images/config_users.png");
+		return;
+	}
+
+	//console.log(GLOBAL.positions);
+	//console.log(GLOBAL.values);
+	
+	var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : strShape,
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				},
+			]
+		}
+	
+	const json = JSON.stringify(dataInfo);
+	console.log(json);
+	GLOBAL.statistic.createByJSON(json);
+}
+
+function loadSymbol(_strFile)
+{
+	GLOBAL.statistic.removeAll();
+
+	fetch(_strFile)
+	  .then(res => res.arrayBuffer())
+	  .then(buffer => {
+		let binary = '';
+		const bytes = new Uint8Array(buffer);
+		for (let b of bytes) binary += String.fromCharCode(b);
+		const base64 = btoa(binary);
+		console.log(base64);
+		
+		var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : "symbol",
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				symbol : { 
+					data : base64, 
+					type : "3ds",
+					},
+				},
+			]
+		}
+		
+		var statistic = Module.getStatistic();
+		const json = JSON.stringify(dataInfo);
+		statistic.createByJSON(json); 
+	});
+
+}
+/////////////////////////////////////////// 일반 데이터 ///////////////////////////////////////////

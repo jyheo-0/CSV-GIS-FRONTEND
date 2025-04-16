@@ -245,6 +245,47 @@ const layers = ref<Layer[]>([
     geometryType: 'polygon',
     fillColor: '#2ecc71',
     filled: true
+  },
+
+  // 🔽 여기부터 새로 추가한 포인트 레이어 3개
+  {
+    id: 4,
+    name: '약국',
+    visible: false,
+    geometryType: 'point',
+    markerType: 'point',
+    size: 30,
+    baseColor: '#4caf50',
+    latColumn: '위도',
+    lngColumn: '경도',
+    labelColumn: '약국명',
+    labelSize: '14'
+  },
+  {
+    id: 5,
+    name: '소화전',
+    visible: false,
+    geometryType: 'point',
+    markerType: 'point',
+    size: 30,
+    baseColor: '#e53935',
+    latColumn: '위도',
+    lngColumn: '경도',
+    labelColumn: '설치장소',
+    labelSize: '14'
+  },
+  {
+    id: 6,
+    name: '음식점',
+    visible: false,
+    geometryType: 'point',
+    markerType: 'point',
+    size: 30,
+    baseColor: '#ff9800',
+    latColumn: '위도',
+    lngColumn: '경도',
+    labelColumn: '업소명',
+    labelSize: '14'
   }
 ])
 
