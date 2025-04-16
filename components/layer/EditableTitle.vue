@@ -15,7 +15,14 @@
         class="editable-input"
         @keyup.enter="submit"
         @blur="submit"
-      />
+      >
+        <template #append-inner>
+          <v-icon size="16" class="mr-1" @click.stop="cancelEdit" style="cursor: pointer;">
+            mdi-close
+          </v-icon>
+        </template>
+      </v-text-field>
+      
     </template>
     <template v-else>
       <div class="d-flex align-center" @click.stop="startEdit">
@@ -62,12 +69,19 @@ function submit() {
     emit('rename', trimmed)
   }
 }
+
+function cancelEdit() {
+  editing.value = false
+  editValue.value = props.name // 원래대로 복구
+}
 </script>
 
 <style scoped>
 ::v-deep(.editable-input .v-input__control) {
   width: 150px !important;
-  font-size: 12px;
+}
+::v-deep(.editable-input .v-field__input) {
+  font-size: 13px !important;
 }
 .editable-title {
   cursor: text;
