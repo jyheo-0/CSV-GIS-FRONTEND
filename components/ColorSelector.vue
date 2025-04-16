@@ -27,7 +27,7 @@
           v-model="localColor"
           @update:model-value="selectColor"
           flat
-          :hide-inputs="false"
+          hide-inputs
           :hide-mode-switch="false"
           class="w-100"
         />
