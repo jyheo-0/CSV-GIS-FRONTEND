@@ -24,21 +24,52 @@
         </div>
       </v-expansion-panel-title>
 
-      <v-expansion-panel-text class="pt-1">
+        <v-expansion-panel-text class="pt-1">
+        <!-- 🧩 레이어 속성 기능 버튼들 -->
+        <v-row dense class="justify-center align-center">
+          <v-col cols="auto">
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              class="hover-info"
+              @click="handlePreview(layer.id)"
+            >
+              <v-icon size="18">mdi-table-eye</v-icon>
+              <v-tooltip activator="parent" location="bottom">데이터 미리보기</v-tooltip>
+            </v-btn>
+          </v-col>
+          <v-col cols="auto">
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              class="hover-success"
+              @click="handleExport(layer.id)"
+            >
+              <v-icon size="18">mdi-export-variant</v-icon>
+              <v-tooltip activator="parent" location="bottom">CSV 내보내기</v-tooltip>
+            </v-btn>
+          </v-col>
+          <v-col cols="auto">
+            <v-btn
+              icon
+              size="x-small"
+              variant="text"
+              class="hover-error"
+              @click="handleDelete(layer.id)"
+            >
+              <v-icon size="18">mdi-delete</v-icon>
+              <v-tooltip activator="parent" location="bottom">레이어 삭제</v-tooltip>
+            </v-btn>
+          </v-col>
+        </v-row>
+
+
+
+
         <v-expansion-panels multiple class="sub-settings">
 
-          <!-- 레이어 속성 설정 -->
-          <v-expansion-panel>
-            <v-expansion-panel-title>레이어 속성</v-expansion-panel-title>
-            <v-expansion-panel-text class="px-0 py-0">
-              <LayerMetadataSettings
-                :layer="layer"
-                @delete="handleDelete(layer.id)"
-                @export="handleExport(layer.id)"
-                @preview="handlePreview(layer.id)"
-              />
-            </v-expansion-panel-text>
-          </v-expansion-panel>
 
           <!-- 포인트 설정 -->
           <v-expansion-panel v-if="layer.geometryType === 'point'">
@@ -50,8 +81,8 @@
                   :alt="layer.markerType"
                   class="marker-icon"
                 />
-                <span class="marker-size">{{ layer.size }}px</span>
                 <div class="marker-color" :style="{ backgroundColor: layer.baseColor }" />
+                <span class="marker-size">{{ layer.size }}px</span>
               </div>
             </v-expansion-panel-title>
 
@@ -145,7 +176,6 @@
 import { ref } from 'vue'
 import LabelSettings from './LabelSettings.vue'
 import EditableTitle from './EditableTitle.vue'
-import LayerMetadataSettings from './LayerMetadataSettings.vue'
 import LocationSettings from './LocationSettings.vue'
 import PointSettings from './geometry/PointSettings.vue'
 import LineSettings from './geometry/LineSettings.vue'
@@ -218,6 +248,22 @@ function formatLabelSize(size: string | number | null | undefined): string {
   if (size == null) return ''
   const raw = typeof size === 'number' ? size : size.replace(/px$/, '')
   return `${raw}px`
+}
+
+
+function handlePreview(id: number) {
+  console.log(`미리보기: ${id}`)
+  // 다이얼로그 띄우는 로직 연결
+}
+
+function handleExport(id: number) {
+  console.log(`내보내기: ${id}`)
+  // 내보내기 처리 로직 연결
+}
+
+function handleDelete(id: number) {
+  console.log(`삭제: ${id}`)
+  // 삭제 처리 로직 연결
 }
 </script>
 
@@ -292,5 +338,15 @@ function formatLabelSize(size: string | number | null | undefined): string {
 .label-preview-text {
   font-weight: bold;
   font-size: 14px;
+}
+
+.hover-info:hover {
+  color: #2196f3; 
+}
+.hover-success:hover {
+  color: #4caf50;
+}
+.hover-error:hover {
+  color: #f44336;
 }
 </style>

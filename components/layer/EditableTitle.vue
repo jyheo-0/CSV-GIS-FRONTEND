@@ -12,14 +12,14 @@
         variant="solo"
         autofocus
         single-line
-        style="max-width: 180px;"
+        class="editable-input"
         @keyup.enter="submit"
         @blur="submit"
       />
     </template>
     <template v-else>
       <div class="d-flex align-center" @click.stop="startEdit">
-        <span>{{ name }}</span>
+        <span class="editable-text">{{ name }}</span>
         <v-icon
           v-if="hover"
           class="ml-1"
@@ -64,8 +64,27 @@ function submit() {
 }
 </script>
 
-<style>
+<style scoped>
+::v-deep(.editable-input .v-input__control) {
+  width: 150px !important;
+  font-size: 12px;
+}
 .editable-title {
   cursor: text;
+  position: relative;
+  display: inline-block;
 }
+
+/* 연필 아이콘 항상 차지할 공간 */
+.editable-title .v-icon {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* hover하면 보이게 */
+.editable-title:hover .v-icon {
+  opacity: 1;
+}
+
+
 </style>
