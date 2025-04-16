@@ -36,7 +36,7 @@
               @click="handlePreview(layer.id)"
             >
               <v-icon size="18">mdi-table-eye</v-icon>
-              <v-tooltip activator="parent" location="bottom">데이터 미리보기</v-tooltip>
+              <v-tooltip activator="parent" location="bottom">csv 미리보기</v-tooltip>
             </v-btn>
           </v-col>
           <v-col cols="auto">
@@ -48,7 +48,7 @@
               @click="handleExport(layer.id)"
             >
               <v-icon size="18">mdi-export-variant</v-icon>
-              <v-tooltip activator="parent" location="bottom">CSV 내보내기</v-tooltip>
+              <v-tooltip activator="parent" location="bottom">내보내기</v-tooltip>
             </v-btn>
           </v-col>
           <v-col cols="auto">
@@ -169,6 +169,13 @@
       </v-expansion-panel-text>
     </v-expansion-panel>
   </v-expansion-panels>
+
+  <DataPreviewDialog
+  v-if="previewLayer"
+  v-model="previewDialog"
+  :columns="previewLayer.columns"
+  :preview-rows="previewLayer.data"
+/>
 </template>
 
 
@@ -181,6 +188,8 @@ import PointSettings from './geometry/PointSettings.vue'
 import LineSettings from './geometry/LineSettings.vue'
 import PolygonSettings from './geometry/PolygonSettings.vue'
 import { geometryOptions } from '@/constants/geometryOptions'
+import DataPreviewDialog from './DataPreviewDialog.vue'
+
 
 interface Layer {
   id: number
@@ -251,11 +260,6 @@ function formatLabelSize(size: string | number | null | undefined): string {
 }
 
 
-function handlePreview(id: number) {
-  console.log(`미리보기: ${id}`)
-  // 다이얼로그 띄우는 로직 연결
-}
-
 function handleExport(id: number) {
   console.log(`내보내기: ${id}`)
   // 내보내기 처리 로직 연결
@@ -265,6 +269,31 @@ function handleDelete(id: number) {
   console.log(`삭제: ${id}`)
   // 삭제 처리 로직 연결
 }
+
+
+
+// 샘플 데이터 예시
+
+const previewDialog = ref(false)
+const previewLayer = ref<{ columns: string[]; data: any[] } | null>(null)
+
+function handlePreview(layerId: number) {
+  const target = layers.value.find(l => l.id === layerId)
+  if (!target) return
+  // 테스트용 목데이터 (실제 CSV 파싱 데이터로 교체 필요)
+  previewLayer.value = {
+    columns: ['위도', '경도', '정류장명', '설치년도'],
+    data: [
+      { 위도: '37.123', 경도: '127.123', 정류장명: '버스정류장1', 설치년도: '2020' },
+      { 위도: '37.456', 경도: '127.456', 정류장명: '버스정류장2', 설치년도: '2021' },
+      { 위도: '37.789', 경도: '127.789', 정류장명: '버스정류장3', 설치년도: '2022' },
+      { 위도: '37.888', 경도: '127.999', 정류장명: '버스정류장4', 설치년도: '2023' },
+      { 위도: '37.999', 경도: '127.000', 정류장명: '버스정류장5', 설치년도: '2024' }
+    ]
+  }
+  previewDialog.value = true
+}
+
 </script>
 
 <style scoped>
