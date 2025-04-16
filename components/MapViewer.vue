@@ -1,46 +1,64 @@
 <template>
   <ClientOnly>
     <div class="map-container">
-      <!-- 지도 들어갈 곳 -->
       <div id="MapContainer"></div>
     </div>
   </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+
+const parsingProgress = ref('0%')    // ✅ 퍼센트용
+const parsingTime = ref('0초')       // ✅ 초용
 
 onMounted(() => {
   console.log('🔥 onMounted 실행됨')
 
-  const existingScript = document.querySelector('script[src="/js/XDWorldEM.js"]')
-  if (existingScript) {
-    console.log('⚠️ XDWorldEM.js 이미 로드됨 — 중복 방지')
-    return
+  // ✅ 전역 콜백 등록! (init.js에서 호출하게 될 함수)
+  window.setProgressCallback = (percent, seconds) => {
+    parsingProgress.value = percent
+    parsingTime.value = seconds
   }
 
-  const engineScript = document.createElement('script')
-  engineScript.src = '/js/XDWorldEM.js'
-  engineScript.async = true
-  engineScript.onload = () => {
-    console.log('✅ XDWorldEM.js 로딩 완료')
+  // 0단계: proj4 먼저 로딩
+  const proj4Script = document.createElement('script')
+  proj4Script.src = 'https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.7.5/proj4.js'
+  proj4Script.onload = () => {
+    console.log('✅ proj4 로딩 완료')
 
-    const initScript = document.createElement('script')
-    initScript.src = '/js/init.js'
-    initScript.onload = () => {
-      console.log('📦 init.js 수동 로딩 완료')
+    // 1단계: XDWorld 엔진 로딩
+    const engineScript = document.createElement('script')
+    engineScript.src = '/js/XDWorldEM.js'
+    engineScript.async = true
+    engineScript.onload = () => {
+      console.log('✅ XDWorldEM.js 로딩 완료')
+
+      // 2단계: init.js 로딩
+      const initScript = document.createElement('script')
+      initScript.src = '/js/init.js'
+      initScript.onload = () => {
+        console.log('📦 init.js 수동 로딩 완료')
+      }
+      initScript.onerror = () => {
+        console.error('❌ init.js 로딩 실패')
+      }
+
+      document.body.appendChild(initScript)
     }
-    initScript.onerror = () => {
-      console.error('❌ init.js 로딩 실패')
+
+    engineScript.onerror = () => {
+      console.error('❌ XDWorldEM.js 로딩 실패')
     }
-    document.body.appendChild(initScript)
+
+    document.body.appendChild(engineScript)
   }
 
-  engineScript.onerror = () => {
-    console.error('❌ XDWorldEM.js 로딩 실패')
+  proj4Script.onerror = () => {
+    console.error('❌ proj4 로딩 실패')
   }
 
-  document.body.appendChild(engineScript)
+  document.body.appendChild(proj4Script)
 })
 </script>
 

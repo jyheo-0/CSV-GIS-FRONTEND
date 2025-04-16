@@ -25,6 +25,35 @@
       </v-expansion-panel-title>
 
         <v-expansion-panel-text class="pt-1">
+          <v-col cols="auto" v-if="['약국', '소화전', '음식점'].includes(layer.name)">
+            <v-btn
+              size="x-small"
+              variant="outlined"
+              class="mr-1"
+              @click="parseLayer(getTypeFromName(layer.name))"
+            >
+              CSV Parse
+            </v-btn>
+            <div>
+              약국 진행률: <span id="prograss_1">0%</span>
+              / 소요시간: <span id="timer_1">0초</span>
+            </div>
+            <v-btn
+              size="x-small"
+              variant="tonal"
+              color="primary"
+              @click="visualizeLayer(getTypeFromName(layer.name))"
+            >
+              지도에 표시
+            </v-btn>
+          </v-col>
+
+          <div class="d-flex align-center mb-2">
+  <v-chip size="small" color="blue">{{ parsingProgress }}</v-chip>
+  <v-chip size="small" color="green" class="ml-2">{{ parsingTime }}</v-chip>
+</div>
+
+
         <!-- 🧩 레이어 속성 기능 버튼들 -->
         <v-row dense class="justify-center align-center">
           <v-col cols="auto">
@@ -180,7 +209,7 @@
 
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import LabelSettings from './LabelSettings.vue'
 import EditableTitle from './EditableTitle.vue'
 import LocationSettings from './LocationSettings.vue'
@@ -189,6 +218,12 @@ import LineSettings from './geometry/LineSettings.vue'
 import PolygonSettings from './geometry/PolygonSettings.vue'
 import { geometryOptions } from '@/constants/geometryOptions'
 import DataPreviewDialog from './DataPreviewDialog.vue'
+
+declare global {
+  interface Window {
+    setProgressCallback?: (percent: string) => void
+  }
+}
 
 
 interface Layer {
@@ -318,6 +353,9 @@ function handleDelete(id: number) {
 const previewDialog = ref(false)
 const previewLayer = ref<{ columns: string[]; data: any[] } | null>(null)
 
+const parsingProgress = ref('0%')
+const parsingTime = ref('0초')
+
 function handlePreview(layerId: number) {
   const target = layers.value.find(l => l.id === layerId)
   if (!target) return
@@ -335,6 +373,36 @@ function handlePreview(layerId: number) {
   previewDialog.value = true
 }
 
+
+function getTypeFromName(name: string): number {
+  if (name === '음식점') return 0
+  if (name === '소화전') return 1
+  if (name === '약국') return 2
+  return -1
+}
+
+// ✅ CSV 파싱만
+function parseLayer(type: number) {
+  if (type < 0) return
+  console.log(`📦 CSV 파싱 실행: type=${type}`)
+  window.parseLargeCSV?.(type)
+}
+
+// ✅ 마커 가시화
+function visualizeLayer(type: number) {
+  if (type < 0) return
+  console.log(`📡 가시화 실행: type=${type}`)
+  window.loadPositionData?.(3) // shape 타입: 구(sphere)로 고정 (필요하면 바꿀 수 있음)
+}
+
+const progress = ref("0%")
+
+onMounted(() => {
+  // ✅ 진행률 콜백 등록
+  window.setProgressCallback = (percent) => {
+    progress.value = percent
+  }
+})
 </script>
 
 <style scoped>
