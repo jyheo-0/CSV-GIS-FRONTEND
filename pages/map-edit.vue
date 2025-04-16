@@ -12,7 +12,6 @@
     <v-navigation-drawer
       v-model="layerPanelOpen"
       app
-      temporary
       location="left"
       width="320"
       class="sidebar-panel"
