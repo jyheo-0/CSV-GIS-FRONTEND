@@ -592,96 +592,96 @@ function removeCruster()
 /////////////////////////////////////////// 대용량 데이터 ///////////////////////////////////////////
 
 /////////////////////////////////////////// 일반 데이터 ///////////////////////////////////////////
-// function loadPositionData(shapeType)
-// {
+function loadPositionData(shapeType)
+{
+
+	GLOBAL.statistic.removeAll();
+	GLOBAL.totalArea = false;
+
+	if (shapeType === 'symbol') {
+		loadSymbol('./3ds/tree.3ds');
+		return;
+	  }
+
+	  if (shapeType === 'icon') {
+		loadIconType('./markers/config_users.png');
+		return;
+	  }
+	// var strShape;
+	// if(_nIndex == 0) strShape = "vertical_line";
+	// else if(_nIndex == 1) strShape = "cylinder";
+	// else if(_nIndex == 2) strShape = "circle";
+	// else if(_nIndex == 3) strShape = "sphere";
+	// else if(_nIndex == 4) {
+	// 	loadSymbol("./3ds/tree.3ds");
+	// 	return;
+	// }
+	// else if(_nIndex == 6) {
+	// 	loadIconType("./images/config_users.png");
+	// 	return;
+	// }
+
+	//console.log(GLOBAL.positions);
+	//console.log(GLOBAL.values);
+
+	const strShape = shapeType || "sphere"; // ✅ 여기서 제대로 받는 것
+	console.log("📍 shapeType으로 가시화:", strShape);
+
+	var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape: strShape,
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				},
+			]
+		}
 	
-// 	GLOBAL.statistic.removeAll();
-// 	GLOBAL.totalArea = false;
+	const json = JSON.stringify(dataInfo);
+	console.log(json);
+	GLOBAL.statistic.createByJSON(json);
+}
 
-// 	if (shapeType === 'symbol') {
-// 		loadSymbol('./3ds/tree.3ds');
-// 		return;
-// 	  }
+function loadSymbol(_strFile)
+{
+	GLOBAL.statistic.removeAll();
 
-// 	  if (shapeType === 'icon') {
-// 		loadIconType('./markers/config_users.png');
-// 		return;
-// 	  }
-// 	// var strShape;
-// 	// if(_nIndex == 0) strShape = "vertical_line";
-// 	// else if(_nIndex == 1) strShape = "cylinder";
-// 	// else if(_nIndex == 2) strShape = "circle";
-// 	// else if(_nIndex == 3) strShape = "sphere";
-// 	// else if(_nIndex == 4) {
-// 	// 	loadSymbol("./3ds/tree.3ds");
-// 	// 	return;
-// 	// }
-// 	// else if(_nIndex == 6) {
-// 	// 	loadIconType("./images/config_users.png");
-// 	// 	return;
-// 	// }
-
-// 	//console.log(GLOBAL.positions);
-// 	//console.log(GLOBAL.values);
-
-// 	const strShape = shapeType || "sphere"; // ✅ 여기서 제대로 받는 것
-// 	console.log("📍 shapeType으로 가시화:", strShape);
-
-// 	var dataInfo = {
-// 		objects : [
-// 			{	
-// 				key : "Test",
-// 				dataType : "position",
-// 				type : "instanced",
-// 				shape: strShape,
-// 				points : GLOBAL.positions,
-// 				value : GLOBAL.values,
-// 				weight : [1, 1, 1],
-// 				},
-// 			]
-// 		}
-	
-// 	const json = JSON.stringify(dataInfo);
-// 	console.log(json);
-// 	GLOBAL.statistic.createByJSON(json);
-// }
-
-// function loadSymbol(_strFile)
-// {
-// 	GLOBAL.statistic.removeAll();
-
-// 	fetch(_strFile)
-// 	  .then(res => res.arrayBuffer())
-// 	  .then(buffer => {
-// 		let binary = '';
-// 		const bytes = new Uint8Array(buffer);
-// 		for (let b of bytes) binary += String.fromCharCode(b);
-// 		const base64 = btoa(binary);
-// 		console.log(base64);
+	fetch(_strFile)
+	  .then(res => res.arrayBuffer())
+	  .then(buffer => {
+		let binary = '';
+		const bytes = new Uint8Array(buffer);
+		for (let b of bytes) binary += String.fromCharCode(b);
+		const base64 = btoa(binary);
+		console.log(base64);
 		
-// 		var dataInfo = {
-// 		objects : [
-// 			{	
-// 				key : "Test",
-// 				dataType : "position",
-// 				type : "instanced",
-// 				shape : "symbol",
-// 				points : GLOBAL.positions,
-// 				value : GLOBAL.values,
-// 				weight : [1, 1, 1],
-// 				symbol : { 
-// 					data : base64, 
-// 					type : "3ds",
-// 					},
-// 				},
-// 			]
-// 		}
+		var dataInfo = {
+		objects : [
+			{	
+				key : "Test",
+				dataType : "position",
+				type : "instanced",
+				shape : "symbol",
+				points : GLOBAL.positions,
+				value : GLOBAL.values,
+				weight : [1, 1, 1],
+				symbol : { 
+					data : base64, 
+					type : "3ds",
+					},
+				},
+			]
+		}
 		
-// 		var statistic = Module.getStatistic();
-// 		const json = JSON.stringify(dataInfo);
-// 		statistic.createByJSON(json); 
-// 	});
+		var statistic = Module.getStatistic();
+		const json = JSON.stringify(dataInfo);
+		statistic.createByJSON(json); 
+	});
 
-// }
+}
 
 /////////////////////////////////////////// 일반 데이터 ///////////////////////////////////////////

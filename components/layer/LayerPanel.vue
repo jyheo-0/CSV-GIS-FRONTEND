@@ -213,10 +213,11 @@ import LineSettings from './geometry/LineSettings.vue'
 import PolygonSettings from './geometry/PolygonSettings.vue'
 import { geometryOptions } from '@/constants/geometryOptions'
 import DataPreviewDialog from './DataPreviewDialog.vue'
+import { useXDWorld } from '@/composables/useXDWorld'
 
 declare global {
   interface Window {
-    setProgressCallback?: (percent: string) => void
+    setProgressCallback?: (percent: string, seconds: string) => void
     isXDWorldReady?: boolean
     parseLargeCSV?: (type: number) => void
     loadPositionData?: (shapeType: string) => void
@@ -353,8 +354,13 @@ function handleDelete(id: number) {
 const previewDialog = ref(false)
 const previewLayer = ref<{ columns: string[]; data: any[] } | null>(null)
 
-const parsingProgress = ref('0%')
-const parsingTime = ref('0초')
+const {
+  isXDWorldReady,
+  parseLargeCSV,
+  loadPositionData,
+  removeAllMarkers,
+  setProgressCallback
+} = useXDWorld()
 
 function handlePreview(layerId: number) {
   const target = layers.value.find(l => l.id === layerId)
@@ -383,47 +389,48 @@ function getTypeFromName(name: string): number {
 
 // ✅ 마커 가시화
 function visualizeLayer(type: number, markerType: string = 'sphere') {
-  if (!window.isXDWorldReady) {
+  if (!isXDWorldReady.value) {
     console.warn('🛑 아직 XDWorld 초기화되지 않음')
     return
   }
 
   console.log(`📦 CSV 파싱 실행: type=${type}`)
-  window.parseLargeCSV?.(type)
+  parseLargeCSV(type)
 
   setTimeout(() => {
     console.log(`🧭 가시화 실행: shape=${markerType}`)
-    window.loadPositionData?.(markerType)
+    loadPositionData(markerType)
   }, 1000)
 }
 const selectedShape = ref<string>('')
 
 // ✅ 마커 형상 watch → 바로 반영 또는 제거
 watch(selectedShape, (newVal) => {
-  if (!window.isXDWorldReady) return
+  if (!isXDWorldReady.value) return
+
   if (!newVal) {
     console.log('🚫 마커 타입 없음 - 마커 제거')
-    window.removeAllMarkers?.()
+    removeAllMarkers()
   } else {
     console.log('🧭 마커 타입 변경됨:', newVal)
-    window.loadPositionData?.(newVal)
+    loadPositionData(newVal)
   }
 })
 
 // ✅ CSV 파싱만 (표시 X)
 function parseLayer(type: number) {
-  if (!window.isXDWorldReady) {
+  if (!isXDWorldReady.value) {
     console.warn('🛑 아직 XDWorld 초기화되지 않음')
     return
   }
   console.log(`📦 CSV 파싱 실행: type=${type}`)
-  window.parseLargeCSV?.(type)
+  parseLargeCSV(type)
 }
 
 onMounted(() => {
-  window.setProgressCallback = (percent: string) => {
-    console.log('진행률:', percent)
-  }
+  setProgressCallback((percent) => {
+    console.log('파싱 진행률:', percent)
+  })
 })
 
 

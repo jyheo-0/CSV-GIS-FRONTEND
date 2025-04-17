@@ -1,29 +1,29 @@
 <template>
-  <div class="d-flex" style="height: 100vh;">
-    <!-- LeftNav 고정 -->
-    <div class="left-nav">
-      <LeftNav
-        :active="layerPanelOpen"
-        @toggleLayer="layerPanelOpen = !layerPanelOpen"
-      />
+  <ClientOnly>
+    <div class="d-flex" style="height: 100vh;">
+      <!-- LeftNav 고정 -->
+      <div class="left-nav">
+        <LeftNav
+          :active="layerPanelOpen"
+          @toggleLayer="layerPanelOpen = !layerPanelOpen"
+        />
+      </div>
+      <!-- Sidebar - toggle 방식 -->
+      <v-navigation-drawer
+        v-model="layerPanelOpen"
+        app
+        location="left"
+        width="320"
+        class="sidebar-panel"
+      >
+            <Sidebar />
+      </v-navigation-drawer>
+      <!-- MapViewer가 LeftNav 옆부터 차지하도록 -->
+      <div class="flex-grow-1 position-relative" style="margin-left: 56px; min-height: 100vh;">
+        <MapViewer />
+      </div>
     </div>
-
-    <!-- Sidebar - toggle 방식 -->
-    <v-navigation-drawer
-      v-model="layerPanelOpen"
-      app
-      location="left"
-      width="320"
-      class="sidebar-panel"
-    >
-          <Sidebar />
-    </v-navigation-drawer>
-
-    <!-- MapViewer가 LeftNav 옆부터 차지하도록 -->
-    <div class="flex-grow-1 position-relative" style="margin-left: 56px; min-height: 100vh;">
-      <MapViewer />
-    </div>
-  </div>
+  </ClientOnly>
 </template>
 
 <script setup>

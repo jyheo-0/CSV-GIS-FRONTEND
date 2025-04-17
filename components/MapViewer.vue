@@ -10,13 +10,18 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 
+declare global {
+  interface Window {
+    setProgressCallback?: (percent: string, seconds: string) => void
+  }
+}
+
 const parsingProgress = ref('0%')    // ✅ 퍼센트용
 const parsingTime = ref('0초')       // ✅ 초용
 
 onMounted(() => {
   console.log('🔥 onMounted 실행됨')
 
-  // ✅ 전역 콜백 등록! (init.js에서 호출하게 될 함수)
   window.setProgressCallback = (percent, seconds) => {
     parsingProgress.value = percent
     parsingTime.value = seconds
