@@ -2,6 +2,7 @@
   <ClientOnly>
     <div class="map-container">
       <div id="MapContainer"></div>
+      <div id="DV_Main" style="display: none;"></div>
     </div>
   </ClientOnly>
 </template>

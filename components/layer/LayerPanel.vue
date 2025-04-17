@@ -34,24 +34,18 @@
             >
               CSV Parse
             </v-btn>
-            <div>
-              약국 진행률: <span id="prograss_1">0%</span>
-              / 소요시간: <span id="timer_1">0초</span>
+            <div class="d-flex align-center mb-2">
+              <v-chip size="small" color="blue">
+                진행률: <span id="prograss_1">0%</span>
+              </v-chip>
+              <v-chip size="small" color="green" class="ml-2">
+                소요시간: <span id="timer_1">0초</span>
+              </v-chip>
             </div>
-            <v-btn
-              size="x-small"
-              variant="tonal"
-              color="primary"
-              @click="visualizeLayer(getTypeFromName(layer.name))"
-            >
-              지도에 표시
-            </v-btn>
+
           </v-col>
 
-          <div class="d-flex align-center mb-2">
-  <v-chip size="small" color="blue">{{ parsingProgress }}</v-chip>
-  <v-chip size="small" color="green" class="ml-2">{{ parsingTime }}</v-chip>
-</div>
+
 
 
         <!-- 🧩 레이어 속성 기능 버튼들 -->
@@ -118,6 +112,7 @@
             <v-expansion-panel-text class="px-0 py-0">
               <PointSettings
                 :layer="layer"
+                v-model:selectedShape="selectedShape"
                 @update-type="layer.markerType = $event"
                 @update-size="layer.size = $event"
                 @update-color="layer.baseColor = $event"
@@ -222,8 +217,13 @@ import DataPreviewDialog from './DataPreviewDialog.vue'
 declare global {
   interface Window {
     setProgressCallback?: (percent: string) => void
+    isXDWorldReady?: boolean
+    parseLargeCSV?: (type: number) => void
+    loadPositionData?: (shapeType: string) => void
+    removeAllMarkers?: () => void
   }
 }
+
 
 
 interface Layer {
@@ -288,7 +288,7 @@ const layers = ref<Layer[]>([
     name: '약국',
     visible: false,
     geometryType: 'point',
-    markerType: 'point',
+    markerType: 'none',
     size: 30,
     baseColor: '#4caf50',
     latColumn: '위도',
@@ -381,28 +381,52 @@ function getTypeFromName(name: string): number {
   return -1
 }
 
-// ✅ CSV 파싱만
+// ✅ 마커 가시화
+function visualizeLayer(type: number, markerType: string = 'sphere') {
+  if (!window.isXDWorldReady) {
+    console.warn('🛑 아직 XDWorld 초기화되지 않음')
+    return
+  }
+
+  console.log(`📦 CSV 파싱 실행: type=${type}`)
+  window.parseLargeCSV?.(type)
+
+  setTimeout(() => {
+    console.log(`🧭 가시화 실행: shape=${markerType}`)
+    window.loadPositionData?.(markerType)
+  }, 1000)
+}
+const selectedShape = ref<string>('')
+
+// ✅ 마커 형상 watch → 바로 반영 또는 제거
+watch(selectedShape, (newVal) => {
+  if (!window.isXDWorldReady) return
+  if (!newVal) {
+    console.log('🚫 마커 타입 없음 - 마커 제거')
+    window.removeAllMarkers?.()
+  } else {
+    console.log('🧭 마커 타입 변경됨:', newVal)
+    window.loadPositionData?.(newVal)
+  }
+})
+
+// ✅ CSV 파싱만 (표시 X)
 function parseLayer(type: number) {
-  if (type < 0) return
+  if (!window.isXDWorldReady) {
+    console.warn('🛑 아직 XDWorld 초기화되지 않음')
+    return
+  }
   console.log(`📦 CSV 파싱 실행: type=${type}`)
   window.parseLargeCSV?.(type)
 }
 
-// ✅ 마커 가시화
-function visualizeLayer(type: number) {
-  if (type < 0) return
-  console.log(`📡 가시화 실행: type=${type}`)
-  window.loadPositionData?.(3) // shape 타입: 구(sphere)로 고정 (필요하면 바꿀 수 있음)
-}
-
-const progress = ref("0%")
-
 onMounted(() => {
-  // ✅ 진행률 콜백 등록
-  window.setProgressCallback = (percent) => {
-    progress.value = percent
+  window.setProgressCallback = (percent: string) => {
+    console.log('진행률:', percent)
   }
 })
+
+
 </script>
 
 <style scoped>

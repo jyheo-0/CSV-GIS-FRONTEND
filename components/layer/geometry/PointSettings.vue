@@ -142,8 +142,14 @@ const props = defineProps<{
     markerType?: string
     [key: string]: any
   }
+  selectedShape: string
 }>()
-const emit = defineEmits(['update-type', 'update-size', 'update-color'])
+const emit = defineEmits([
+  'update-type',
+  'update-size',
+  'update-color',
+  'update:selectedShape'
+])
 
 const localSize = ref(props.layer.size ?? 50)
 const localColor = ref(props.layer.baseColor ?? '#ff6b6b')
@@ -153,6 +159,7 @@ const { layer } = props
 
 function updateType(item: { value: string }) {
   emit('update-type', item.value)
+  emit('update:selectedShape', item.value) // 💡 v-model:selectedShape과 연동되도록
 }
 function updateColor(color: string) {
   localColor.value = color

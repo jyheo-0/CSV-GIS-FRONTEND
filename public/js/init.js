@@ -35,6 +35,7 @@ var Module = {
 /* 엔진 로드 후 실행할 초기화 함수(Module.postRun) */
 function init() {
 	console.log('🧭 XDWorld init() 실행됨')
+
 	Module.SetProxy("http://www.xdmap.com:8080/Landscape/js/proxy.jsp?url=");
 	Module.SetEncodingVWorldDEM(true);
 	
@@ -72,9 +73,14 @@ function init() {
 	Module.getOption().setTextureCapacityLimit(false);
 	
 	Module.getOption().setPickingCalculateType(1);
+	
+		  // ✅ 전역 상태값으로 알려주기
+		  window.isXDWorldReady = true
+		  window.loadPositionData = loadPositionData
+		  window.parseLargeCSV = parseLargeCSV
+		  console.log('✅ XDWorld 초기화 완료, isXDWorldReady =', window.isXDWorldReady)
+	
 }
-
-
 /*********************** 아래부터 API 테스트 영역 입니다 ********************************************/
 
 var GLOBAL = {
@@ -115,6 +121,12 @@ function initPage() {
 	
 	GLOBAL.statistic = Module.getStatistic();
 }
+
+function removeAllMarkers() {
+	GLOBAL.statistic?.removeAll?.()
+  }
+  window.removeAllMarkers = removeAllMarkers
+
 
 function initEvent(_canvas) {
 	
@@ -282,6 +294,7 @@ async function parseLargeCSV(_type) {
 
 	// GLOBAL.positions 영역 분할
 	if(_type == 0) divideIntoTiles();
+
 }
 
 /////////////////////////////////////////// 대용량 데이터 ///////////////////////////////////////////
@@ -421,41 +434,41 @@ function loadIconType(_strFile)
 	});
 }
 
-function changeShapeType(_nIndex)
-{
-	if(_nIndex == 0) GLOBAL.strShape = "vertical_line";
-	else if(_nIndex == 1) GLOBAL.strShape = "cylinder";
-	else if(_nIndex == 2) GLOBAL.strShape = "circle";
-	else if(_nIndex == 3) GLOBAL.strShape = "sphere";
-	else if(_nIndex == 4) {
-		GLOBAL.strShape = "symbol";
-		loadLargeSymbol("./3ds/tree.3ds");
-		return;
-	}
-	else if(_nIndex == 6) {
-		GLOBAL.strShape = "icon";
-		loadIconType("./images/config_users.png");
-		return;
-	}
+// function changeShapeType(_nIndex)
+// {
+// 	if(_nIndex == 0) GLOBAL.strShape = "vertical_line";
+// 	else if(_nIndex == 1) GLOBAL.strShape = "cylinder";
+// 	else if(_nIndex == 2) GLOBAL.strShape = "circle";
+// 	else if(_nIndex == 3) GLOBAL.strShape = "sphere";
+// 	else if(_nIndex == 4) {
+// 		GLOBAL.strShape = "symbol";
+// 		loadLargeSymbol("./3ds/tree.3ds");
+// 		return;
+// 	}
+// 	else if(_nIndex == 6) {
+// 		GLOBAL.strShape = "icon";
+// 		loadIconType("./images/config_users.png");
+// 		return;
+// 	}
 
-	var dataInfo = {
-		objects : [
-			{	
-				key : "Test",
-				dataType : "position",
-				type : "instanced",
-				shape : "symbol",
-				points : GLOBAL.positions,
-				value : GLOBAL.values,
-				weight : [0.1, 0.1, 0.1],
-				},
-			]
-		}
+// 	var dataInfo = {
+// 		objects : [
+// 			{	
+// 				key : "Test",
+// 				dataType : "position",
+// 				type : "instanced",
+// 				shape : "symbol",
+// 				points : GLOBAL.positions,
+// 				value : GLOBAL.values,
+// 				weight : [0.1, 0.1, 0.1],
+// 				},
+// 			]
+// 		}
 	
-	const json = JSON.stringify(dataInfo);
-	console.log(json);
-	GLOBAL.statistic.createByJSON(json);
-}
+// 	const json = JSON.stringify(dataInfo);
+// 	console.log(json);
+// 	GLOBAL.statistic.createByJSON(json);
+// }
 
 function loadLargeSymbol(_strFile)
 {
@@ -589,35 +602,52 @@ function removeCruster()
 /////////////////////////////////////////// 대용량 데이터 ///////////////////////////////////////////
 
 /////////////////////////////////////////// 일반 데이터 ///////////////////////////////////////////
-function loadPositionData(_nIndex)
+function loadPositionData(shapeType)
 {
+	if (!GLOBAL.statistic) {
+		console.warn("🛑 XDWorld가 아직 초기화되지 않았습니다.");
+		return;
+	  }
+	
 	GLOBAL.statistic.removeAll();
 	GLOBAL.totalArea = false;
 
-	var strShape;
-	if(_nIndex == 0) strShape = "vertical_line";
-	else if(_nIndex == 1) strShape = "cylinder";
-	else if(_nIndex == 2) strShape = "circle";
-	else if(_nIndex == 3) strShape = "sphere";
-	else if(_nIndex == 4) {
-		loadSymbol("./3ds/tree.3ds");
+	if (shapeType === 'symbol') {
+		loadSymbol('./3ds/tree.3ds');
 		return;
-	}
-	else if(_nIndex == 6) {
-		loadIconType("./images/config_users.png");
+	  }
+
+	  if (shapeType === 'icon') {
+		loadIconType('./markers/config_users.png');
 		return;
-	}
+	  }
+	// var strShape;
+	// if(_nIndex == 0) strShape = "vertical_line";
+	// else if(_nIndex == 1) strShape = "cylinder";
+	// else if(_nIndex == 2) strShape = "circle";
+	// else if(_nIndex == 3) strShape = "sphere";
+	// else if(_nIndex == 4) {
+	// 	loadSymbol("./3ds/tree.3ds");
+	// 	return;
+	// }
+	// else if(_nIndex == 6) {
+	// 	loadIconType("./images/config_users.png");
+	// 	return;
+	// }
 
 	//console.log(GLOBAL.positions);
 	//console.log(GLOBAL.values);
-	
+
+	const strShape = shapeType || "sphere"; // ✅ 여기서 제대로 받는 것
+	console.log("📍 shapeType으로 가시화:", strShape);
+
 	var dataInfo = {
 		objects : [
 			{	
 				key : "Test",
 				dataType : "position",
 				type : "instanced",
-				shape : strShape,
+				shape: strShape,
 				points : GLOBAL.positions,
 				value : GLOBAL.values,
 				weight : [1, 1, 1],
@@ -667,4 +697,5 @@ function loadSymbol(_strFile)
 	});
 
 }
+
 /////////////////////////////////////////// 일반 데이터 ///////////////////////////////////////////

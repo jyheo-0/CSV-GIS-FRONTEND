@@ -5,7 +5,7 @@ export type MarkerType =
   | 'none'
   | 'point'
   | 'circle'
-  | 'vertical-line'
+  | 'vertical_line'
   | 'cylinder'
   | 'sphere'
   | 'cone'
@@ -23,7 +23,7 @@ export const geometryOptions: GeometryOption[] = [
   { value: 'none', label: '선택 안함' },
   { value: 'point', label: '점' },
   { value: 'circle', label: '원' },
-  { value: 'vertical-line', label: '수직선' },
+  { value: 'vertical_line', label: '수직선' },
   { value: 'cylinder', label: '실린더' },
   { value: 'sphere', label: '구' },
   { value: 'cone', label: '콘' },
